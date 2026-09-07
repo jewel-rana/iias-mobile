@@ -1,0 +1,107 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/theme/app_colors.dart';
+import '../../core/widgets/common_widgets.dart';
+import '../../data/models/models.dart';
+import '../../data/repositories/app_repository.dart';
+
+final eventsTabProvider = StateProvider<int>((ref) => 0);
+
+final eventsProvider = FutureProvider((ref) {
+  return ref.watch(repositoryProvider).getEvents();
+});
+
+class EventsScreen extends ConsumerWidget {
+  const EventsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tab = ref.watch(eventsTabProvider);
+    final eventsAsync = ref.watch(eventsProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Funds'),
+        actions: [
+          IconButton(
+            onPressed: () => context.push('/new-donation'),
+            icon: const Icon(Icons.add_circle_outline),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Center(child: Text('Active')),
+                    selected: tab == 0,
+                    onSelected: (_) => ref.read(eventsTabProvider.notifier).state = 0,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Center(child: Text('Past')),
+                    selected: tab == 1,
+                    onSelected: (_) => ref.read(eventsTabProvider.notifier).state = 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: eventsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => EmptyState(message: '$e'),
+              data: (events) {
+                final filtered = events.where((e) {
+                  if (tab == 0) return e.status == EventStatus.active;
+                  return e.status != EventStatus.active;
+                }).toList();
+                if (filtered.isEmpty) {
+                  return const EmptyState(message: 'No fundraising events');
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, i) {
+                    final e = filtered[i];
+                    return SectionCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(e.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                          const SizedBox(height: 8),
+                          ProgressBar(value: e.progress),
+                          const SizedBox(height: 8),
+                          Text(
+                            '৳ ${e.raisedAmount} of ৳ ${e.goalAmount} · ${e.donorCount} donors',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                          ),
+                          const SizedBox(height: 12),
+                          if (e.status == EventStatus.active)
+                            AppButton(
+                              label: 'Donate',
+                              onPressed: () => context.push('/new-donation?eventId=${e.id}'),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
