@@ -101,9 +101,22 @@ class MockData {
     ),
   ];
 
-  static List<MonthlyDue> duesFor(String memberId) {
-    final member = members.firstWhere((m) => m.id == memberId);
-    final amount = member.monthlyAmount;
+  static List<MonthlyDue> duesFor(
+    String memberId, {
+    Member? member,
+    int monthlyAmount = 500,
+    MemberPaymentStatus status = MemberPaymentStatus.unpaid,
+    int advanceMonths = 0,
+  }) {
+    final resolved = member ??
+        members.cast<Member?>().firstWhere(
+              (m) => m?.id == memberId,
+              orElse: () => null,
+            );
+    final amount = resolved?.monthlyAmount ?? monthlyAmount;
+    final memberStatus = resolved?.status ?? status;
+    final advMonths = resolved?.advanceMonths ?? advanceMonths;
+
     return [
       MonthlyDue(
         id: '$memberId-jul',
@@ -126,8 +139,8 @@ class MockData {
         memberId: memberId,
         billingMonth: DateTime(2026, 9, 1),
         amountDue: amount,
-        amountPaid: member.status == MemberPaymentStatus.paid ? amount : 0,
-        status: member.status == MemberPaymentStatus.paid
+        amountPaid: memberStatus == MemberPaymentStatus.paid ? amount : 0,
+        status: memberStatus == MemberPaymentStatus.paid
             ? DueStatus.paid
             : DueStatus.unpaid,
       ),
@@ -136,16 +149,16 @@ class MockData {
         memberId: memberId,
         billingMonth: DateTime(2026, 10, 1),
         amountDue: amount,
-        amountPaid: member.advanceMonths > 0 ? amount : 0,
-        status: member.advanceMonths > 0 ? DueStatus.paid : DueStatus.unpaid,
+        amountPaid: advMonths > 0 ? amount : 0,
+        status: advMonths > 0 ? DueStatus.paid : DueStatus.unpaid,
       ),
       MonthlyDue(
         id: '$memberId-nov',
         memberId: memberId,
         billingMonth: DateTime(2026, 11, 1),
         amountDue: amount,
-        amountPaid: member.advanceMonths > 1 ? amount : 0,
-        status: member.advanceMonths > 1 ? DueStatus.paid : DueStatus.unpaid,
+        amountPaid: advMonths > 1 ? amount : 0,
+        status: advMonths > 1 ? DueStatus.paid : DueStatus.unpaid,
       ),
       MonthlyDue(
         id: '$memberId-dec',
@@ -203,7 +216,157 @@ class MockData {
     paid: 92,
     partial: 13,
     unpaid: 20,
+    fundsAvailable: 515500,
+    totalInflow: 568000,
+    totalExpenses: 52500,
   );
+
+  /// Historical collections + donations baseline (beyond sample payment rows).
+  static const totalInflowBaseline = 568000;
+
+  static final expenseHeads = <ExpenseHead>[
+    const ExpenseHead(
+      id: 'h1',
+      name: "Imam's Salary",
+      code: 'imam_salary',
+      kind: ExpenseHeadKind.salary,
+      defaultRecurrence: ExpenseRecurrence.monthly,
+      isActive: true,
+      sortOrder: 1,
+    ),
+    const ExpenseHead(
+      id: 'h2',
+      name: 'Staff Salary',
+      code: 'staff_salary',
+      kind: ExpenseHeadKind.salary,
+      defaultRecurrence: ExpenseRecurrence.monthly,
+      isActive: true,
+      sortOrder: 2,
+    ),
+    const ExpenseHead(
+      id: 'h3',
+      name: 'Festival Bonus (Eid)',
+      code: 'festival_bonus_eid',
+      kind: ExpenseHeadKind.festivalBonus,
+      defaultRecurrence: ExpenseRecurrence.occasional,
+      isActive: true,
+      sortOrder: 3,
+    ),
+    const ExpenseHead(
+      id: 'h4',
+      name: 'Social Curriculum',
+      code: 'social_curriculum',
+      kind: ExpenseHeadKind.operational,
+      defaultRecurrence: ExpenseRecurrence.monthly,
+      isActive: true,
+      sortOrder: 4,
+    ),
+    const ExpenseHead(
+      id: 'h5',
+      name: 'Utilities',
+      code: 'utilities',
+      kind: ExpenseHeadKind.operational,
+      defaultRecurrence: ExpenseRecurrence.monthly,
+      isActive: true,
+      sortOrder: 5,
+    ),
+    const ExpenseHead(
+      id: 'h6',
+      name: 'Maintenance',
+      code: 'maintenance',
+      kind: ExpenseHeadKind.operational,
+      defaultRecurrence: ExpenseRecurrence.occasional,
+      isActive: true,
+      sortOrder: 6,
+    ),
+    const ExpenseHead(
+      id: 'h7',
+      name: 'Charity / Relief',
+      code: 'charity',
+      kind: ExpenseHeadKind.charity,
+      defaultRecurrence: ExpenseRecurrence.occasional,
+      isActive: true,
+      sortOrder: 7,
+    ),
+  ];
+
+  static final expenses = <Expense>[
+    Expense(
+      id: 'x1',
+      title: "Imam's Salary — September",
+      expenseHeadId: 'h1',
+      headName: "Imam's Salary",
+      headKind: ExpenseHeadKind.salary,
+      recurrence: ExpenseRecurrence.monthly,
+      amount: 15000,
+      expenseDate: DateTime(2026, 9, 1),
+      paymentMethod: PaymentMethod.cashToCollector,
+    ),
+    Expense(
+      id: 'x2',
+      title: "Imam's Salary — August",
+      expenseHeadId: 'h1',
+      headName: "Imam's Salary",
+      headKind: ExpenseHeadKind.salary,
+      recurrence: ExpenseRecurrence.monthly,
+      amount: 15000,
+      expenseDate: DateTime(2026, 8, 1),
+      paymentMethod: PaymentMethod.cashToCollector,
+    ),
+    Expense(
+      id: 'x7',
+      title: 'Eid-ul-Fitr Festival Bonus',
+      expenseHeadId: 'h3',
+      headName: 'Festival Bonus (Eid)',
+      headKind: ExpenseHeadKind.festivalBonus,
+      recurrence: ExpenseRecurrence.occasional,
+      amount: 10000,
+      expenseDate: DateTime(2026, 4, 10),
+      notes: 'Imam + helpers',
+    ),
+    Expense(
+      id: 'x3',
+      title: 'Weekend Islamic class materials',
+      expenseHeadId: 'h4',
+      headName: 'Social Curriculum',
+      headKind: ExpenseHeadKind.operational,
+      recurrence: ExpenseRecurrence.monthly,
+      amount: 3500,
+      expenseDate: DateTime(2026, 9, 5),
+      notes: 'Books and stationery for kids class',
+    ),
+    Expense(
+      id: 'x4',
+      title: 'Eid food distribution',
+      expenseHeadId: 'h7',
+      headName: 'Charity / Relief',
+      headKind: ExpenseHeadKind.charity,
+      recurrence: ExpenseRecurrence.occasional,
+      amount: 12000,
+      expenseDate: DateTime(2026, 8, 20),
+    ),
+    Expense(
+      id: 'x5',
+      title: 'Mosque cleaning supplies',
+      expenseHeadId: 'h6',
+      headName: 'Maintenance',
+      headKind: ExpenseHeadKind.operational,
+      recurrence: ExpenseRecurrence.occasional,
+      amount: 2200,
+      expenseDate: DateTime(2026, 9, 3),
+    ),
+    Expense(
+      id: 'x6',
+      title: 'Electricity bill',
+      expenseHeadId: 'h5',
+      headName: 'Utilities',
+      headKind: ExpenseHeadKind.operational,
+      recurrence: ExpenseRecurrence.monthly,
+      amount: 4800,
+      expenseDate: DateTime(2026, 9, 2),
+      paymentMethod: PaymentMethod.mobileWallet,
+    ),
+  ];
 
   static const report = ReportSummary(
     monthLabel: 'September 2026',
@@ -262,6 +425,102 @@ class MockData {
       method: PaymentMethod.mobileWallet,
       date: DateTime(2026, 9, 6),
       referredByName: 'Abdul Karim',
+    ),
+  ];
+
+  static final joinRequests = <JoinRequest>[
+    JoinRequest(
+      id: 'j1',
+      fullName: 'Imran Hossain',
+      phone: '01755556666',
+      email: 'imran@example.com',
+      referralCode: 'AK-1024',
+      preferredMonthlyAmount: 500,
+      status: JoinRequestStatus.submitted,
+      submittedAt: DateTime(2026, 9, 6, 10, 20),
+    ),
+    JoinRequest(
+      id: 'j2',
+      fullName: 'Nusrat Jahan',
+      phone: '01877778888',
+      preferredMonthlyAmount: 500,
+      status: JoinRequestStatus.submitted,
+      submittedAt: DateTime(2026, 9, 5, 16, 45),
+    ),
+    JoinRequest(
+      id: 'j3',
+      fullName: 'Shahidul Islam',
+      phone: '01922223333',
+      referralCode: 'RA-1025',
+      preferredMonthlyAmount: 1000,
+      status: JoinRequestStatus.submitted,
+      submittedAt: DateTime(2026, 9, 4, 9, 10),
+    ),
+    JoinRequest(
+      id: 'j4',
+      fullName: 'Rasheda Begum',
+      phone: '01611112222',
+      status: JoinRequestStatus.approved,
+      preferredMonthlyAmount: 500,
+      submittedAt: DateTime(2026, 9, 1, 11, 0),
+    ),
+    JoinRequest(
+      id: 'j5',
+      fullName: 'Kamrul Hasan',
+      phone: '01533334444',
+      status: JoinRequestStatus.rejected,
+      rejectionReason: 'Could not verify phone number',
+      submittedAt: DateTime(2026, 8, 28, 14, 30),
+    ),
+  ];
+
+  static const organizationSettings = OrganizationSettings(
+    organizationName: 'IIAS',
+    tagline: 'Isapura Islamic United Organization',
+    contactPhone: '01911785317',
+    address: 'Isapura Molla Bari Jame Masjid, Bakergonj, Barisal',
+    defaultMonthlyAmount: 500,
+    currencySymbol: '৳',
+    referralEnabled: true,
+    publicJoinEnabled: true,
+  );
+
+  static final committeeRoles = <CommitteeRole>[
+    const CommitteeRole(id: 'cr1', name: 'Chairman', code: 'chairman', isActive: true, sortOrder: 1),
+    const CommitteeRole(id: 'cr2', name: 'Secretary', code: 'secretary', isActive: true, sortOrder: 2),
+    const CommitteeRole(id: 'cr3', name: 'Treasurer', code: 'treasurer', isActive: true, sortOrder: 3),
+    const CommitteeRole(id: 'cr4', name: 'Joint Secretary', code: 'joint_secretary', isActive: true, sortOrder: 4),
+    const CommitteeRole(id: 'cr5', name: 'Organizing Member', code: 'organizing_member', isActive: true, sortOrder: 5),
+  ];
+
+  static final committeeMembers = <CommitteeMember>[
+    const CommitteeMember(
+      id: 'cm1',
+      name: 'Ahmad Rahman',
+      roleId: 'cr1',
+      roleName: 'Chairman',
+      roleCode: 'chairman',
+      phone: '01712345678',
+      sortOrder: 1,
+    ),
+    const CommitteeMember(
+      id: 'cm2',
+      name: 'Rahim Ahmed',
+      roleId: 'cr2',
+      roleName: 'Secretary',
+      roleCode: 'secretary',
+      phone: '01933334444',
+      memberId: 'm2',
+      sortOrder: 2,
+    ),
+    const CommitteeMember(
+      id: 'cm3',
+      name: 'Hasan Ali',
+      roleId: 'cr3',
+      roleName: 'Treasurer',
+      roleCode: 'treasurer',
+      phone: '01788889999',
+      sortOrder: 3,
     ),
   ];
 }

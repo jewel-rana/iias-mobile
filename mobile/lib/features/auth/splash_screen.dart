@@ -16,6 +16,7 @@ class SplashScreen extends StatelessWidget {
         showArch: true,
         showCornerPatterns: true,
         showMosqueScene: true,
+        showBottomSkyline: true,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(28, 24, 28, 20),
@@ -106,7 +107,7 @@ class SplashScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 100),
               ],
             ),
           ),

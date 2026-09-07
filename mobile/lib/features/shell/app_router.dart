@@ -10,13 +10,22 @@ import '../members/members_screen.dart';
 import '../members/member_detail_screen.dart';
 import '../members/add_member_screen.dart';
 import '../payments/collect_payment_screen.dart';
+import '../payments/collection_screen.dart';
+import '../payments/payment_approvals_screen.dart';
 import '../payments/payment_success_screen.dart';
 import '../events/events_screen.dart';
 import '../events/new_donation_screen.dart';
 import '../events/donation_success_screen.dart';
+import '../events/add_campaign_screen.dart';
+import '../expenses/expenses_screen.dart';
+import '../expenses/add_expense_screen.dart';
+import '../expenses/expense_heads_screen.dart';
 import '../reports/reports_screen.dart';
 import '../reports/monthly_members_screen.dart';
 import '../more/more_screen.dart';
+import '../more/join_requests_screen.dart';
+import '../more/organization_settings_screen.dart';
+import '../more/committee_screen.dart';
 import '../join/join_screen.dart';
 import '../profile/member_home_screen.dart';
 import '../shell/main_shell.dart';
@@ -69,7 +78,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(routes: [
             GoRoute(
               path: '/collection',
-              builder: (_, __) => const MembersScreen(forCollection: true),
+              builder: (context, state) => const CollectionScreen(),
             ),
           ]),
           StatefulShellBranch(routes: [
@@ -86,6 +95,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/add-member',
         builder: (context, state) => const AddMemberScreen(),
+      ),
+      GoRoute(
+        path: '/add-campaign',
+        builder: (context, state) => const AddCampaignScreen(),
       ),
       GoRoute(
         path: '/collect/:memberId',
@@ -108,6 +121,41 @@ final routerProvider = Provider<GoRouter>((ref) {
             DonationSuccessScreen(donation: state.extra as EventDonation),
       ),
       GoRoute(path: '/reports', builder: (_, __) => const ReportsScreen()),
+      GoRoute(path: '/expenses', builder: (_, __) => const ExpensesScreen()),
+      GoRoute(
+        path: '/add-expense',
+        builder: (_, state) {
+          final kindParam = state.uri.queryParameters['kind'];
+          final kind = switch (kindParam) {
+            'salary' => ExpenseHeadKind.salary,
+            'festival_bonus' => ExpenseHeadKind.festivalBonus,
+            'operational' => ExpenseHeadKind.operational,
+            'charity' => ExpenseHeadKind.charity,
+            'other' => ExpenseHeadKind.other,
+            _ => null,
+          };
+          return AddExpenseScreen(initialKind: kind);
+        },
+      ),
+      GoRoute(
+        path: '/expense-heads',
+        builder: (_, __) => const ExpenseHeadsScreen(),
+      ),
+      GoRoute(
+        path: '/join-requests',
+        builder: (_, __) => const JoinRequestsScreen(),
+      ),
+      GoRoute(
+        path: '/payment-approvals',
+        builder: (_, __) => const PaymentApprovalsScreen(),
+      ),
+      GoRoute(
+        path: '/organization-settings',
+        builder: (_, __) => const OrganizationSettingsScreen(),
+      ),      GoRoute(
+        path: '/committee',
+        builder: (_, __) => const CommitteeScreen(),
+      ),
       GoRoute(
         path: '/monthly-members',
         builder: (_, state) => MonthlyMembersScreen(

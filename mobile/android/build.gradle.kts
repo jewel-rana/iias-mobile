@@ -20,18 +20,6 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-// flutter_secure_storage 11 requests compileSdk 37, but local SDK
-// only exposes android-37.0. Cap library plugins to 36 for builds.
-subprojects {
-    pluginManager.withPlugin("com.android.library") {
-        extensions.configure<com.android.build.gradle.LibraryExtension>("android") {
-            if ((compileSdk ?: 0) > 36) {
-                compileSdk = 36
-            }
-        }
-    }
-}
-
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

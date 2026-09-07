@@ -42,9 +42,17 @@ class PaymentSuccessScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Payment Recorded',
+                payment.isPending ? 'Payment Submitted' : 'Payment Recorded',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
+              if (payment.isPending) ...[
+                const SizedBox(height: 8),
+                const Text(
+                  'Waiting for admin approval. This payment is not counted yet.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ],
               const SizedBox(height: 8),
               MoneyText(payment.amount, style: Theme.of(context).textTheme.headlineMedium),
               Text(
@@ -56,9 +64,28 @@ class PaymentSuccessScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _row('Receipt', payment.receiptNumber),
+                    _row(
+                      'Status',
+                      payment.isPending
+                          ? 'Pending approval'
+                          : payment.status == PaymentStatus.rejected
+                              ? 'Rejected'
+                              : 'Confirmed',
+                    ),
                     _row('Date', DateFormat('dd MMM yyyy').format(payment.date)),
                     _row('Method', _methodLabel(payment.method)),
-                    if (payment.collectorName != null) _row('Collector', payment.collectorName!),
+                    if (payment.method == PaymentMethod.mobileWallet) ...[
+                      if (payment.walletAccount != null && payment.walletAccount!.isNotEmpty)
+                        _row('Wallet Account', payment.walletAccount!),
+                      if (payment.transactionId != null && payment.transactionId!.isNotEmpty)
+                        _row('Transaction ID', payment.transactionId!),
+                    ],
+                    if (payment.method == PaymentMethod.cashToCollector &&
+                        payment.collectorName != null)
+                      _row('Collector', payment.collectorName!),
+                    if (payment.method == PaymentMethod.handCash &&
+                        payment.collectorName != null)
+                      _row('Received By', payment.collectorName!),
                     const Divider(height: 24),
                     ...payment.allocations.map(
                       (a) => Padding(
@@ -80,8 +107,14 @@ class PaymentSuccessScreen extends StatelessWidget {
               AppButton(label: 'View Receipt', onPressed: () {}),
               const SizedBox(height: 10),
               TextButton(
-                onPressed: () => context.go('/dashboard'),
-                child: const Text('Back to Dashboard'),
+                onPressed: () {
+                  if (payment.isPending) {
+                    context.go('/member-home');
+                  } else {
+                    context.go('/dashboard');
+                  }
+                },
+                child: Text(payment.isPending ? 'Back to Home' : 'Back to Dashboard'),
               ),
             ],
           ),

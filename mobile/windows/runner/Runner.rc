@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.ummahconnect" "\0"
+            VALUE "CompanyName", "com.durpalla" "\0"
             VALUE "FileDescription", "ummah_connect" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "ummah_connect" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.ummahconnect. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.durpalla. All rights reserved." "\0"
             VALUE "OriginalFilename", "ummah_connect.exe" "\0"
             VALUE "ProductName", "ummah_connect" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

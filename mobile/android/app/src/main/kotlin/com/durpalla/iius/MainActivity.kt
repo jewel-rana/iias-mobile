@@ -1,4 +1,4 @@
-package com.ummahconnect.ummah_connect
+package com.durpalla.iius
 
 import io.flutter.embedding.android.FlutterActivity
 

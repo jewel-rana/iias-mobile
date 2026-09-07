@@ -8,6 +8,16 @@ import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
 
+final memberDetailProvider =
+    FutureProvider.autoDispose.family<({Member? member, List<MonthlyDue> dues}), String>(
+  (ref, memberId) async {
+    final repo = ref.watch(repositoryProvider);
+    final member = await repo.getMember(memberId);
+    final dues = await repo.getMemberDues(memberId);
+    return (member: member, dues: dues);
+  },
+);
+
 class MemberDetailScreen extends ConsumerWidget {
   const MemberDetailScreen({super.key, required this.memberId});
 
@@ -15,24 +25,32 @@ class MemberDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(repositoryProvider);
+    final async = ref.watch(memberDetailProvider(memberId));
 
-    return FutureBuilder(
-      future: Future.wait([
-        repo.getMember(memberId),
-        repo.getMemberDues(memberId),
-      ]),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        }
-        final member = (snapshot.data![0] as Member?);
-        final dues = snapshot.data![1] as List<MonthlyDue>;
+    return async.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Scaffold(
+        appBar: AppBar(title: const Text('Member Details')),
+        body: EmptyState(message: 'Unable to load member.\n$e'),
+      ),
+      data: (data) {
+        final member = data.member;
+        final dues = data.dues;
         if (member == null) {
-          return const Scaffold(body: EmptyState(message: 'Member not found'));
+          return Scaffold(
+            appBar: AppBar(title: const Text('Member Details')),
+            body: const EmptyState(message: 'Member not found'),
+          );
         }
+
+        final initial = member.name.trim().isEmpty
+            ? '?'
+            : member.name.trim().characters.first.toUpperCase();
 
         return Scaffold(
+          backgroundColor: AppColors.background,
           appBar: AppBar(title: const Text('Member Details')),
           bottomNavigationBar: SafeArea(
             child: Padding(
@@ -53,7 +71,7 @@ class MemberDetailScreen extends ConsumerWidget {
                       radius: 32,
                       backgroundColor: AppColors.primaryLight,
                       child: Text(
-                        member.name.characters.first,
+                        initial,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
@@ -66,12 +84,21 @@ class MemberDetailScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(member.name,
-                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
-                          Text(member.memberCode,
-                              style: const TextStyle(color: AppColors.textSecondary)),
-                          Text(member.phone,
-                              style: const TextStyle(color: AppColors.textSecondary)),
+                          Text(
+                            member.name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          ),
+                          Text(
+                            member.memberCode,
+                            style: const TextStyle(color: AppColors.textSecondary),
+                          ),
+                          Text(
+                            member.phone,
+                            style: const TextStyle(color: AppColors.textSecondary),
+                          ),
                         ],
                       ),
                     ),
@@ -85,7 +112,13 @@ class MemberDetailScreen extends ConsumerWidget {
                     child: SectionCard(
                       child: Column(
                         children: [
-                          const Text('Total Paid', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          const Text(
+                            'Total Paid',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           MoneyText(member.totalPaid),
                         ],
                       ),
@@ -96,7 +129,13 @@ class MemberDetailScreen extends ConsumerWidget {
                     child: SectionCard(
                       child: Column(
                         children: [
-                          const Text('Outstanding', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          const Text(
+                            'Outstanding',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           MoneyText(member.outstanding, color: AppColors.unpaid),
                         ],
                       ),
@@ -107,7 +146,13 @@ class MemberDetailScreen extends ConsumerWidget {
                     child: SectionCard(
                       child: Column(
                         children: [
-                          const Text('Advance', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          const Text(
+                            'Advance',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           MoneyText(member.advance, color: AppColors.advance),
                         ],
                       ),
@@ -120,14 +165,29 @@ class MemberDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Current Dues (2026)', style: TextStyle(fontWeight: FontWeight.w800)),
+                    const Text(
+                      'Current Dues (2026)',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _DueStat(label: 'Paid', value: '${member.paidMonths}', color: AppColors.paid),
-                        _DueStat(label: 'Due', value: '${member.dueMonths}', color: AppColors.unpaid),
-                        _DueStat(label: 'Advance', value: '${member.advanceMonths}', color: AppColors.advance),
+                        _DueStat(
+                          label: 'Paid',
+                          value: '${member.paidMonths}',
+                          color: AppColors.paid,
+                        ),
+                        _DueStat(
+                          label: 'Due',
+                          value: '${member.dueMonths}',
+                          color: AppColors.unpaid,
+                        ),
+                        _DueStat(
+                          label: 'Advance',
+                          value: '${member.advanceMonths}',
+                          color: AppColors.advance,
+                        ),
                       ],
                     ),
                     const Divider(height: 28),
@@ -141,8 +201,10 @@ class MemberDetailScreen extends ConsumerWidget {
                             Text('৳ ${d.amountPaid}/${d.amountDue}'),
                             const SizedBox(width: 8),
                             if (d.status == DueStatus.paid) const StatusBadge.paid(),
-                            if (d.status == DueStatus.partial) const StatusBadge.partial(),
-                            if (d.status == DueStatus.unpaid) const StatusBadge.unpaid(),
+                            if (d.status == DueStatus.partial)
+                              const StatusBadge.partial(),
+                            if (d.status == DueStatus.unpaid)
+                              const StatusBadge.unpaid(),
                           ],
                         ),
                       );
@@ -177,7 +239,11 @@ class MemberDetailScreen extends ConsumerWidget {
                       trailing: const Icon(Icons.copy),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Referral ${member.referralCode} ready to share')),
+                          SnackBar(
+                            content: Text(
+                              'Referral ${member.referralCode} ready to share',
+                            ),
+                          ),
                         );
                       },
                     ),
@@ -194,7 +260,11 @@ class MemberDetailScreen extends ConsumerWidget {
 }
 
 class _DueStat extends StatelessWidget {
-  const _DueStat({required this.label, required this.value, required this.color});
+  const _DueStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
   final String label;
   final String value;
   final Color color;
@@ -203,7 +273,14 @@ class _DueStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: color)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
         Text(label, style: const TextStyle(color: AppColors.textSecondary)),
       ],
     );

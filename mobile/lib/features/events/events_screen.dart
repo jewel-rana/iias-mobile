@@ -26,10 +26,18 @@ class EventsScreen extends ConsumerWidget {
         title: const Text('Funds'),
         actions: [
           IconButton(
+            tooltip: 'Record donation',
             onPressed: () => context.push('/new-donation'),
-            icon: const Icon(Icons.add_circle_outline),
+            icon: const Icon(Icons.volunteer_activism_outlined),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/add-campaign'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Campaign'),
       ),
       body: Column(
         children: [
@@ -69,7 +77,7 @@ class EventsScreen extends ConsumerWidget {
                   return const EmptyState(message: 'No fundraising events');
                 }
                 return ListView.separated(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                   itemCount: filtered.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, i) {

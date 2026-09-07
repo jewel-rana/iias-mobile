@@ -1,28 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../data/repositories/app_repository.dart';
 
-class JoinScreen extends StatefulWidget {
+class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key});
 
   @override
-  State<JoinScreen> createState() => _JoinScreenState();
+  ConsumerState<JoinScreen> createState() => _JoinScreenState();
 }
 
-class _JoinScreenState extends State<JoinScreen> {
+class _JoinScreenState extends ConsumerState<JoinScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _phone = TextEditingController();
+  final _email = TextEditingController();
   final _referral = TextEditingController();
   bool _submitted = false;
+  bool _loading = false;
 
   @override
   void dispose() {
     _name.dispose();
     _phone.dispose();
+    _email.dispose();
     _referral.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await ref.read(repositoryProvider).submitJoinRequest(
+            fullName: _name.text.trim(),
+            phone: _phone.text.trim(),
+            email: _email.text.trim(),
+            referralCode: _referral.text.trim(),
+          );
+      if (!mounted) return;
+      setState(() => _submitted = true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not submit: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -54,44 +82,52 @@ class _JoinScreenState extends State<JoinScreen> {
                   AppButton(label: 'Back to Login', onPressed: () => context.go('/login')),
                 ],
               )
-            : ListView(
-                children: [
-                  const Text(
-                    'Submit a membership application. Admin approval happens in the mobile app — no web panel.',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: _name,
-                    decoration: const InputDecoration(labelText: 'Full Name'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _phone,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(labelText: 'Phone'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _referral,
-                    decoration: const InputDecoration(
-                      labelText: 'Referral code (optional)',
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    const Text(
+                      'Submit a membership application. Admin approval happens in the mobile app — no web panel.',
+                      style: TextStyle(color: AppColors.textSecondary),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  AppButton(
-                    label: 'Submit Application',
-                    onPressed: () {
-                      if (_name.text.trim().isEmpty || _phone.text.trim().isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Name and phone are required')),
-                        );
-                        return;
-                      }
-                      setState(() => _submitted = true);
-                    },
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: _name,
+                      decoration: const InputDecoration(labelText: 'Full Name'),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _phone,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(labelText: 'Phone'),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email (optional)',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _referral,
+                      decoration: const InputDecoration(
+                        labelText: 'Referral code (optional)',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    AppButton(
+                      label: 'Submit Application',
+                      loading: _loading,
+                      onPressed: _submit,
+                    ),
+                  ],
+                ),
               ),
       ),
     );

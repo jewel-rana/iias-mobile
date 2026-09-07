@@ -23,7 +23,9 @@ class ReportsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(message: '$e'),
         data: (report) {
-          return ListView(
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(reportProvider),
+            child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
               SectionCard(
@@ -32,8 +34,6 @@ class ReportsScreen extends ConsumerWidget {
                     const Icon(Icons.calendar_month, color: AppColors.primary),
                     const SizedBox(width: 10),
                     Text(report.monthLabel, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    const Spacer(),
-                    const Icon(Icons.expand_more),
                   ],
                 ),
               ),
@@ -110,6 +110,7 @@ class ReportsScreen extends ConsumerWidget {
                 '/monthly-members?filter=paid',
               ),
             ],
+          ),
           );
         },
       ),

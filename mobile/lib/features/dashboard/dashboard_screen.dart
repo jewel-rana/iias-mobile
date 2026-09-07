@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../members/members_screen.dart';
 
 final dashboardProvider = FutureProvider((ref) {
   return ref.watch(repositoryProvider).getDashboard();
@@ -17,6 +18,15 @@ final activeEventsProvider = FutureProvider((ref) {
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
+
+  void _openMembers(
+    WidgetRef ref,
+    BuildContext context,
+    MemberPaymentStatus? filter,
+  ) {
+    ref.read(membersFilterProvider.notifier).state = filter;
+    context.go('/members');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,7 +73,16 @@ class DashboardScreen extends ConsumerWidget {
               statsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Text('$e'),
-                data: (stats) => _CollectionHeroCard(stats: stats),
+                data: (stats) => Column(
+                  children: [
+                    _CollectionHeroCard(stats: stats),
+                    const SizedBox(height: 12),
+                    _FundsAvailableCard(
+                      stats: stats,
+                      onTap: () => context.push('/expenses'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 14),
               statsAsync.when(
@@ -76,6 +95,7 @@ class DashboardScreen extends ConsumerWidget {
                         label: 'Members',
                         value: '${stats.totalMembers}',
                         icon: Icons.groups_rounded,
+                        onTap: () => _openMembers(ref, context, null),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -85,6 +105,8 @@ class DashboardScreen extends ConsumerWidget {
                         value: '${stats.paid}',
                         color: AppColors.paid,
                         icon: Icons.check_circle_outline,
+                        onTap: () =>
+                            _openMembers(ref, context, MemberPaymentStatus.paid),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -94,6 +116,11 @@ class DashboardScreen extends ConsumerWidget {
                         value: '${stats.partial}',
                         color: AppColors.partial,
                         icon: Icons.timelapse_rounded,
+                        onTap: () => _openMembers(
+                          ref,
+                          context,
+                          MemberPaymentStatus.partial,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -103,6 +130,11 @@ class DashboardScreen extends ConsumerWidget {
                         value: '${stats.unpaid}',
                         color: AppColors.unpaid,
                         icon: Icons.error_outline_rounded,
+                        onTap: () => _openMembers(
+                          ref,
+                          context,
+                          MemberPaymentStatus.unpaid,
+                        ),
                       ),
                     ),
                   ],
@@ -134,16 +166,20 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                   Expanded(
                     child: _QuickAction(
-                      icon: Icons.volunteer_activism_rounded,
-                      label: '+ Donation',
-                      onTap: () => context.push('/new-donation'),
+                      icon: Icons.account_balance_wallet_outlined,
+                      label: 'Add Expense',
+                      onTap: () => context.push('/add-expense'),
                     ),
                   ),
                   Expanded(
                     child: _QuickAction(
                       icon: Icons.warning_amber_rounded,
                       label: 'View Unpaid',
-                      onTap: () => context.push('/monthly-members?filter=unpaid'),
+                      onTap: () => _openMembers(
+                        ref,
+                        context,
+                        MemberPaymentStatus.unpaid,
+                      ),
                     ),
                   ),
                 ],
@@ -253,41 +289,116 @@ class _CollectionHeroCard extends StatelessWidget {
       );
 }
 
+class _FundsAvailableCard extends StatelessWidget {
+  const _FundsAvailableCard({required this.stats, required this.onTap});
+  final DashboardStats stats;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: SectionCard(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet_rounded,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Total Funds Available',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '৳ ${_fmt(stats.fundsAvailable)}',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Spent ৳ ${_fmt(stats.totalExpenses)} of ৳ ${_fmt(stats.totalInflow)}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _fmt(num n) => n.round().toString().replaceAllMapped(
+        RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+        (m) => '${m[1]},',
+      );
+}
+
 class _StatMini extends StatelessWidget {
   const _StatMini({
     required this.label,
     required this.value,
     this.color,
     this.icon,
+    this.onTap,
   });
   final String label;
   final String value;
   final Color? color;
   final IconData? icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SectionCard(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      child: Column(
-        children: [
-          if (icon != null)
-            Icon(icon, size: 16, color: color ?? AppColors.textSecondary),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
-              color: color ?? AppColors.textPrimary,
+    return GestureDetector(
+      onTap: onTap,
+      child: SectionCard(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Column(
+          children: [
+            if (icon != null)
+              Icon(icon, size: 16, color: color ?? AppColors.textSecondary),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: color ?? AppColors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }

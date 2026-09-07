@@ -5,45 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
-import '../../data/repositories/app_repository.dart';
+import '../members/members_screen.dart';
 
-final membersFilterProvider = StateProvider<MemberPaymentStatus?>((ref) => null);
-
-/// Loads the full member list once; screens filter locally for search.
-final membersProvider = FutureProvider.autoDispose<List<Member>>((ref) async {
-  return ref.read(repositoryProvider).getMembers();
-});
-
-List<Member> filterMembers(
-  List<Member> source, {
-  String query = '',
-  MemberPaymentStatus? status,
-}) {
-  final q = query.trim().toLowerCase();
-  final qDigits = q.replaceAll(RegExp(r'\D'), '');
-
-  return source.where((m) {
-    final matchesStatus = status == null || m.status == status;
-    if (!matchesStatus) return false;
-    if (q.isEmpty) return true;
-
-    final phoneDigits = m.phone.replaceAll(RegExp(r'\D'), '');
-    return m.name.toLowerCase().contains(q) ||
-        m.memberCode.toLowerCase().contains(q) ||
-        m.phone.toLowerCase().contains(q) ||
-        (qDigits.isNotEmpty && phoneDigits.contains(qDigits)) ||
-        m.collectorName.toLowerCase().contains(q);
-  }).toList();
-}
-
-class MembersScreen extends ConsumerStatefulWidget {
-  const MembersScreen({super.key});
+class CollectionScreen extends ConsumerStatefulWidget {
+  const CollectionScreen({super.key});
 
   @override
-  ConsumerState<MembersScreen> createState() => _MembersScreenState();
+  ConsumerState<CollectionScreen> createState() => _CollectionScreenState();
 }
 
-class _MembersScreenState extends ConsumerState<MembersScreen> {
+class _CollectionScreenState extends ConsumerState<CollectionScreen> {
   final _searchCtrl = TextEditingController();
   String _query = '';
 
@@ -61,21 +32,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Members'),
-        actions: [
-          IconButton(
-            tooltip: 'Add Member',
-            onPressed: () => context.push('/add-member'),
-            icon: const Icon(Icons.person_add_alt_1_rounded),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/add-member'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Member'),
+        title: const Text('Collection'),
       ),
       body: Column(
         children: [
@@ -184,7 +141,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(membersProvider),
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                     itemCount: members.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
@@ -192,67 +149,85 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                       final initial = m.name.trim().isEmpty
                           ? '?'
                           : m.name.trim().characters.first.toUpperCase();
-                      return InkWell(
-                        onTap: () => context.push('/members/${m.id}'),
-                        borderRadius: BorderRadius.circular(18),
-                        child: SectionCard(
-                          padding: const EdgeInsets.all(14),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundColor: AppColors.primaryLight,
-                                child: Text(
-                                  initial,
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 18,
+                      return SectionCard(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: AppColors.primaryLight,
+                                  child: Text(
+                                    initial,
+                                    style: const TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        m.name,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        m.memberCode,
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '৳ ${m.monthlyAmount} / month',
+                                        style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Outstanding: ৳ ${m.outstanding}',
+                                        style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                _badge(m.status),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () => context.push('/collect/${m.id}'),
+                                icon: const Icon(Icons.payments_rounded, size: 18),
+                                label: const Text('Collect Payment'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size.fromHeight(44),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      m.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      m.memberCode,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '৳ ${m.monthlyAmount} / month',
-                                      style: const TextStyle(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Collector: ${m.collectorName}',
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              _badge(m.status),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     },

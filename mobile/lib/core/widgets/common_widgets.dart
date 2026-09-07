@@ -54,6 +54,15 @@ class StatusBadge extends StatelessWidget {
   const StatusBadge.advance({super.key})
       : label = 'Advance',
         color = AppColors.advance;
+  const StatusBadge.pending({super.key})
+      : label = 'Pending',
+        color = AppColors.partial;
+  const StatusBadge.rejected({super.key})
+      : label = 'Rejected',
+        color = AppColors.unpaid;
+  const StatusBadge.confirmed({super.key})
+      : label = 'Confirmed',
+        color = AppColors.paid;
 
   final String label;
   final Color color;

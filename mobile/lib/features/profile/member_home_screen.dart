@@ -114,6 +114,11 @@ class MemberHomeScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
+                AppButton(
+                  label: 'Submit Payment',
+                  onPressed: () => context.push('/collect/${member.id}'),
+                ),
+                const SizedBox(height: 20),
                 Text(
                   'Recent Payments',
                   style: Theme.of(context)
@@ -144,12 +149,24 @@ class MemberHomeScreen extends ConsumerWidget {
                                       fontSize: 12,
                                     ),
                                   ),
+                                  if (p.rejectionReason != null)
+                                    Text(
+                                      p.rejectionReason!,
+                                      style: const TextStyle(
+                                        color: AppColors.unpaid,
+                                        fontSize: 11,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
                             MoneyText(p.amount),
                             const SizedBox(width: 8),
-                            const StatusBadge.paid(),
+                            switch (p.status) {
+                              PaymentStatus.pending => const StatusBadge.pending(),
+                              PaymentStatus.rejected => const StatusBadge.rejected(),
+                              PaymentStatus.confirmed => const StatusBadge.confirmed(),
+                            },
                           ],
                         ),
                       ),
@@ -175,7 +192,13 @@ class MemberHomeScreen extends ConsumerWidget {
               ),
               NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
             ],
-            onDestinationSelected: (_) {},
+            onDestinationSelected: (index) {
+              if (index == 1) {
+                context.push('/collect/$memberId');
+              } else if (index == 2) {
+                context.push('/events');
+              }
+            },
           ),
         );
       },
