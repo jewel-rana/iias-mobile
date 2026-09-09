@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/app_colors.dart';
@@ -6,9 +7,18 @@ import 'core/theme/app_theme.dart';
 import 'data/repositories/app_repository.dart';
 import 'features/shell/app_router.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await _loadEnv();
   runApp(const ProviderScope(child: UmmahConnectApp()));
+}
+
+Future<void> _loadEnv() async {
+  await dotenv.load(
+    fileName: '.env.example',
+    overrideWithFiles: const ['.env'],
+    isOptional: true,
+  );
 }
 
 class UmmahConnectApp extends ConsumerWidget {

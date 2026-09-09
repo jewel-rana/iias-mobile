@@ -22,27 +22,8 @@ class SplashScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(28, 24, 28, 20),
             child: Column(
               children: [
-                const SizedBox(height: 18),
-                const BrandMark(size: 72),
-                const SizedBox(height: 16),
-                Text(
-                  AppConstants.appName,
-                  style: GoogleFonts.manrope(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryDark,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  AppConstants.tagline,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.accent,
-                  ),
-                ),
+                const SizedBox(height: 8),
+                const BrandMark(height: 220),
                 const Spacer(flex: 3),
                 Text(
                   AppConstants.quote,

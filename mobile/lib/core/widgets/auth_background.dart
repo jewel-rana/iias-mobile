@@ -98,15 +98,35 @@ class AuthBackground extends StatelessWidget {
 }
 
 class BrandMark extends StatelessWidget {
-  const BrandMark({super.key, this.size = 64});
+  const BrandMark({super.key, this.height = 160, this.radius = 20});
 
-  final double size;
+  static const assetPath = 'assets/images/logo_iias.png';
+
+  final double height;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size.square(size),
-      painter: DomeLogoPainter(color: AppColors.primaryDark),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Image.asset(
+          assetPath,
+          height: height,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
+        ),
+      ),
     );
   }
 }
