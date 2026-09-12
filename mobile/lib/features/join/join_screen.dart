@@ -56,7 +56,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Join Organization')),
+      appBar: const IiasAppBar(title: 'Join Organization'),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: _submitted

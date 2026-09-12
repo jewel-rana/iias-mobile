@@ -31,7 +31,7 @@ class MonthlyMembersScreen extends ConsumerWidget {
       builder: (context, snapshot) {
         final title = filter[0].toUpperCase() + filter.substring(1);
         return Scaffold(
-          appBar: AppBar(title: Text('$title · September 2026')),
+          appBar: IiasAppBar(title: '$title · September 2026'),
           body: !snapshot.hasData
               ? const Center(child: CircularProgressIndicator())
               : ListView.separated(

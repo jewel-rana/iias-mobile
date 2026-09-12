@@ -19,6 +19,8 @@ abstract class AppRepository {
     required String phone,
     required int monthlyAmount,
     String? collectorName,
+    String? email,
+    DateTime? joinedAt,
   });
   Future<List<MonthlyDue>> getMemberDues(String memberId);
   Future<PaymentRecord> createPayment({
@@ -63,7 +65,9 @@ abstract class AppRepository {
     required DateTime expenseDate,
     PaymentMethod? paymentMethod,
     String? notes,
+    DateTime? periodMonth,
   });
+  Future<List<SalaryHeadDues>> getSalaryDues({String? expenseHeadId});
   Future<List<ExpenseHead>> getExpenseHeads({
     bool activeOnly = true,
     ExpenseHeadKind? kind,
@@ -201,6 +205,8 @@ class MockAppRepository implements AppRepository {
     required String phone,
     required int monthlyAmount,
     String? collectorName,
+    String? email,
+    DateTime? joinedAt,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
     final next = _members.length + 1024;
@@ -228,6 +234,8 @@ class MockAppRepository implements AppRepository {
       dueMonths: 1,
       advanceMonths: 0,
       referralCode: '${initials.isEmpty ? 'MB' : initials}-$next',
+      email: email?.trim().isEmpty == true ? null : email?.trim(),
+      joinedAt: joinedAt ?? DateTime.now(),
     );
     _members.insert(0, member);
     return member;
@@ -458,6 +466,7 @@ class MockAppRepository implements AppRepository {
     required DateTime expenseDate,
     PaymentMethod? paymentMethod,
     String? notes,
+    DateTime? periodMonth,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
     final head = _expenseHeads.firstWhere((h) => h.id == expenseHeadId);
@@ -472,9 +481,46 @@ class MockAppRepository implements AppRepository {
       expenseDate: expenseDate,
       paymentMethod: paymentMethod,
       notes: notes?.trim().isEmpty == true ? null : notes?.trim(),
+      periodMonth: periodMonth,
     );
     _expenses.insert(0, expense);
     return expense;
+  }
+
+  @override
+  Future<List<SalaryHeadDues>> getSalaryDues({String? expenseHeadId}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    final now = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    final heads = _expenseHeads.where((h) {
+      if (h.kind != ExpenseHeadKind.salary || !h.isActive) return false;
+      if (expenseHeadId != null && h.id != expenseHeadId) return false;
+      return true;
+    });
+    return heads.map((head) {
+      final paid = {
+        for (final e in _expenses.where((e) => e.expenseHeadId == head.id && e.periodMonth != null))
+          DateTime(e.periodMonth!.year, e.periodMonth!.month, 1): e,
+      };
+      var start = DateTime(now.year, now.month - 11, 1);
+      final periods = <SalaryPeriod>[];
+      var cursor = start;
+      while (!cursor.isAfter(now)) {
+        final match = paid[DateTime(cursor.year, cursor.month, 1)];
+        periods.add(SalaryPeriod(
+          month: DateTime(cursor.year, cursor.month, 1),
+          isPaid: match != null,
+          expenseId: match?.id,
+          amount: match?.amount,
+        ));
+        cursor = DateTime(cursor.year, cursor.month + 1, 1);
+      }
+      return SalaryHeadDues(
+        expenseHeadId: head.id,
+        headName: head.name,
+        dueCount: periods.where((p) => !p.isPaid).length,
+        periods: periods,
+      );
+    }).toList();
   }
 
   @override
@@ -768,8 +814,9 @@ class AuthController extends StateNotifier<AppUser?> {
 
   Future<bool> login(String phone, String password) async {
     final user = await _repo.login(phone, password);
+    if (user == null) return false;
     state = user;
-    return user != null;
+    return true;
   }
 
   Future<void> logout() async {

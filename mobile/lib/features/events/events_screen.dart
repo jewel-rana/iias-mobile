@@ -22,8 +22,9 @@ class EventsScreen extends ConsumerWidget {
     final eventsAsync = ref.watch(eventsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Funds'),
+      appBar: IiasAppBar(
+        title: 'Funds',
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             tooltip: 'Record donation',

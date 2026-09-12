@@ -3,28 +3,42 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/receipt_share.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
+import 'receipt_screen.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
   const PaymentSuccessScreen({super.key, required this.payment});
 
   final PaymentRecord payment;
 
-  String _methodLabel(PaymentMethod m) {
-    switch (m) {
-      case PaymentMethod.mobileWallet:
-        return 'Mobile Wallet';
-      case PaymentMethod.cashToCollector:
-        return 'Cash to collector';
-      case PaymentMethod.handCash:
-        return 'Hand Cash';
+  String _methodLabel(PaymentMethod m) => paymentMethodLabel(m);
+
+  Future<void> _shareWhatsApp(BuildContext context) async {
+    final opened = await shareViaWhatsApp(paymentReceiptMessage(payment));
+    if (!context.mounted) return;
+    if (!opened) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('WhatsApp is not available. Receipt copied.')),
+      );
     }
+  }
+
+  void _viewReceipt(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ReceiptScreen.payment(payment: payment),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: IiasAppBar(
+        title: payment.isPending ? 'Payment Submitted' : 'Payment Recorded',
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -102,9 +116,16 @@ class PaymentSuccessScreen extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              AppButton(label: 'Share WhatsApp', outlined: true, onPressed: () {}),
+              AppButton(
+                label: 'Share WhatsApp',
+                outlined: true,
+                onPressed: () => _shareWhatsApp(context),
+              ),
               const SizedBox(height: 10),
-              AppButton(label: 'View Receipt', onPressed: () {}),
+              AppButton(
+                label: 'View Receipt',
+                onPressed: () => _viewReceipt(context),
+              ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () {

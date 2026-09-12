@@ -103,7 +103,7 @@ class PaymentApprovalsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Payment Approvals')),
+      appBar: const IiasAppBar(title: 'Payment Approvals'),
       body: Column(
         children: [
           SingleChildScrollView(

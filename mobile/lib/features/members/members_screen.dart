@@ -60,8 +60,9 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Members'),
+      appBar: IiasAppBar(
+        title: 'Members',
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             tooltip: 'Add Member',

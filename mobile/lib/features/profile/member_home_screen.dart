@@ -17,7 +17,10 @@ class MemberHomeScreen extends ConsumerWidget {
     final memberId = user?.memberId;
 
     if (memberId == null) {
-      return const Scaffold(body: EmptyState(message: 'Member profile not found'));
+      return const Scaffold(
+        appBar: IiasAppBar(title: 'Home', automaticallyImplyLeading: false),
+        body: EmptyState(message: 'Member profile not found'),
+      );
     }
 
     return FutureBuilder(
@@ -27,46 +30,48 @@ class MemberHomeScreen extends ConsumerWidget {
       ]),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            appBar: IiasAppBar(title: 'Home', automaticallyImplyLeading: false),
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         final member = snapshot.data![0] as Member?;
         final allPayments = snapshot.data![1] as List<PaymentRecord>;
         if (member == null) {
-          return const Scaffold(body: EmptyState(message: 'Member profile not found'));
+          return const Scaffold(
+            appBar: IiasAppBar(title: 'Home', automaticallyImplyLeading: false),
+            body: EmptyState(message: 'Member profile not found'),
+          );
         }
         final payments = allPayments.where((p) => p.memberId == member.id).toList();
 
         return Scaffold(
-          body: SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Assalamu Alaikum',
-                              style: TextStyle(color: AppColors.textSecondary)),
-                          Text(
-                            member.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () async {
-                        await ref.read(authStateProvider.notifier).logout();
-                        if (context.mounted) context.go('/login');
-                      },
-                      icon: const Icon(Icons.logout),
-                    ),
-                  ],
+          appBar: IiasAppBar(
+            title: 'Home',
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                onPressed: () async {
+                  await ref.read(authStateProvider.notifier).logout();
+                  if (context.mounted) context.go('/login');
+                },
+                icon: const Icon(Icons.logout),
+              ),
+            ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(20),
+            children: [
+                Text(
+                  'Assalamu Alaikum',
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                Text(
+                  member.name,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 16),
                 SectionCard(
@@ -178,8 +183,7 @@ class MemberHomeScreen extends ConsumerWidget {
                   outlined: true,
                   onPressed: () => context.push('/events'),
                 ),
-              ],
-            ),
+            ],
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: 0,

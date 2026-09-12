@@ -14,7 +14,7 @@ class MoreScreen extends ConsumerWidget {
     final user = ref.watch(authStateProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('More')),
+      appBar: const IiasAppBar(title: 'More', automaticallyImplyLeading: false),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

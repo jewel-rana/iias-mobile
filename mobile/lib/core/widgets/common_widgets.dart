@@ -1,6 +1,63 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'auth_background.dart';
+
+class IiasAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const IiasAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.leading,
+    this.automaticallyImplyLeading = true,
+    this.bottom,
+  });
+
+  final String title;
+  final List<Widget>? actions;
+  final Widget? leading;
+  final bool automaticallyImplyLeading;
+  final PreferredSizeWidget? bottom;
+
+  @override
+  Size get preferredSize => Size.fromHeight(
+        kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      automaticallyImplyLeading: automaticallyImplyLeading,
+      leading: leading,
+      centerTitle: false,
+      titleSpacing: 8,
+      title: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              BrandMark.assetPath,
+              height: 36,
+              width: 36,
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.high,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      actions: actions,
+      bottom: bottom,
+    );
+  }
+}
 
 class AppButton extends StatelessWidget {
   const AppButton({

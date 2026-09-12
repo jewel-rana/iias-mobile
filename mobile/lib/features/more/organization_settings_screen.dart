@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../core/navigation/back_fallback.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
@@ -77,11 +77,7 @@ class _OrganizationSettingsScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${updated.organizationName} settings saved')),
       );
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go('/more');
-      }
+      popOrGo(context, '/more');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -98,7 +94,7 @@ class _OrganizationSettingsScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Organization Settings')),
+      appBar: const IiasAppBar(title: 'Organization Settings'),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),

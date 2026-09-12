@@ -36,38 +36,30 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(dashboardProvider);
-            ref.invalidate(activeEventsProvider);
-          },
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+      appBar: IiasAppBar(
+        title: 'Dashboard',
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.notifications_none_rounded),
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(dashboardProvider);
+          ref.invalidate(activeEventsProvider);
+        },
+        child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Assalamu Alaikum, ${user?.name ?? 'User'}',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            height: 1.25,
-                          ),
+              Text(
+                'Assalamu Alaikum, ${user?.name ?? 'User'}',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      height: 1.25,
                     ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.notifications_none_rounded),
-                    ),
-                  ),
-                ],
               ),
               const SizedBox(height: 18),
               statsAsync.when(
@@ -222,7 +214,6 @@ class DashboardScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ),
     );
   }
 }

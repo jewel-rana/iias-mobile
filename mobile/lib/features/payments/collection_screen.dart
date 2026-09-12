@@ -31,8 +31,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Collection'),
+      appBar: const IiasAppBar(
+        title: 'Collection',
+        automaticallyImplyLeading: false,
       ),
       body: Column(
         children: [

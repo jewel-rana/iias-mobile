@@ -27,7 +27,7 @@ class JoinRequestsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Join Requests')),
+      appBar: const IiasAppBar(title: 'Join Requests'),
       body: Column(
         children: [
           SingleChildScrollView(

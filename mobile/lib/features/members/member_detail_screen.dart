@@ -29,10 +29,11 @@ class MemberDetailScreen extends ConsumerWidget {
 
     return async.when(
       loading: () => const Scaffold(
+        appBar: IiasAppBar(title: 'Member Details'),
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
-        appBar: AppBar(title: const Text('Member Details')),
+        appBar: const IiasAppBar(title: 'Member Details'),
         body: EmptyState(message: 'Unable to load member.\n$e'),
       ),
       data: (data) {
@@ -40,7 +41,7 @@ class MemberDetailScreen extends ConsumerWidget {
         final dues = data.dues;
         if (member == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Member Details')),
+            appBar: const IiasAppBar(title: 'Member Details'),
             body: const EmptyState(message: 'Member not found'),
           );
         }
@@ -51,7 +52,7 @@ class MemberDetailScreen extends ConsumerWidget {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: AppBar(title: const Text('Member Details')),
+          appBar: const IiasAppBar(title: 'Member Details'),
           bottomNavigationBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -99,6 +100,16 @@ class MemberDetailScreen extends ConsumerWidget {
                             member.phone,
                             style: const TextStyle(color: AppColors.textSecondary),
                           ),
+                          if (member.email != null && member.email!.isNotEmpty)
+                            Text(
+                              member.email!,
+                              style: const TextStyle(color: AppColors.textSecondary),
+                            ),
+                          if (member.joinedAt != null)
+                            Text(
+                              'Joined ${DateFormat('dd MMM yyyy').format(member.joinedAt!)}',
+                              style: const TextStyle(color: AppColors.textSecondary),
+                            ),
                         ],
                       ),
                     ),

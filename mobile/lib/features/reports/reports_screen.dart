@@ -18,7 +18,7 @@ class ReportsScreen extends ConsumerWidget {
     final reportAsync = ref.watch(reportProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reports')),
+      appBar: const IiasAppBar(title: 'Reports'),
       body: reportAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(message: '$e'),

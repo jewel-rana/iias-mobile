@@ -1,10 +1,26 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../models/models.dart';
 import 'app_repository.dart';
+
+String _prettyJson(Object? data) {
+  if (data == null) return '(empty)';
+  try {
+    return const JsonEncoder.withIndent('  ').convert(data);
+  } catch (_) {
+    return data.toString();
+  }
+}
+
+void _logApi(String message) {
+  debugPrint(message, wrapWidth: 2048);
+}
 
 class ApiAppRepository implements AppRepository {
   ApiAppRepository({Dio? dio, FlutterSecureStorage? storage})
@@ -29,6 +45,39 @@ class ApiAppRepository implements AppRepository {
         },
       ),
     );
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            _logApi('→ ${options.method} ${options.uri}');
+            if (options.queryParameters.isNotEmpty) {
+              _logApi('  query: ${_prettyJson(options.queryParameters)}');
+            }
+            if (options.data != null) {
+              _logApi('  payload: ${_prettyJson(options.data)}');
+            }
+            handler.next(options);
+          },
+          onResponse: (response, handler) {
+            _logApi(
+              '← ${response.statusCode} ${response.requestOptions.method} ${response.requestOptions.uri}',
+            );
+            _logApi('  response: ${_prettyJson(response.data)}');
+            handler.next(response);
+          },
+          onError: (error, handler) {
+            _logApi(
+              '← ${error.response?.statusCode ?? 'ERR'} ${error.requestOptions.method} ${error.requestOptions.uri}',
+            );
+            if (error.requestOptions.data != null) {
+              _logApi('  payload: ${_prettyJson(error.requestOptions.data)}');
+            }
+            _logApi('  response: ${_prettyJson(error.response?.data)}');
+            handler.next(error);
+          },
+        ),
+      );
+    }
   }
 
   final Dio _dio;
@@ -124,6 +173,10 @@ class ApiAppRepository implements AppRepository {
         dueMonths: json['due_months'] as int,
         advanceMonths: json['advance_months'] as int,
         referralCode: json['referral_code'] as String,
+        email: json['email'] as String?,
+        joinedAt: json['joined_at'] != null
+            ? DateTime.tryParse(json['joined_at'] as String)
+            : null,
       );
 
   FundraisingEvent _mapEvent(Map<String, dynamic> json) => FundraisingEvent(
@@ -182,23 +235,42 @@ class ApiAppRepository implements AppRepository {
         referredByName: json['referred_by_name'] as String?,
       );
 
+  String _messageFromDio(DioException e, {String fallback = 'Request failed'}) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final message = data['message'];
+      if (message is String && message.isNotEmpty) return message;
+      final errors = data['errors'];
+      if (errors is Map && errors.isNotEmpty) {
+        final first = errors.values.first;
+        if (first is List && first.isNotEmpty) return first.first.toString();
+        if (first is String && first.isNotEmpty) return first;
+      }
+    }
+    return e.message?.trim().isNotEmpty == true ? e.message! : fallback;
+  }
+
   @override
   Future<AppUser?> login(String phone, String password) async {
-    final res = await _dio.post('/auth/login', data: {
-      'phone': phone,
-      'password': password,
-    });
-    final token = res.data['token'] as String;
-    await _storage.write(key: 'auth_token', value: token);
-    final u = res.data['user'] as Map<String, dynamic>;
-    _user = AppUser(
-      id: u['id'].toString(),
-      name: u['name'] as String,
-      phone: u['phone'] as String,
-      role: _role(u['role'] as String?),
-      memberId: u['member_id']?.toString(),
-    );
-    return _user;
+    try {
+      final res = await _dio.post('/auth/login', data: {
+        'phone': phone,
+        'password': password,
+      });
+      final token = res.data['token'] as String;
+      await _storage.write(key: 'auth_token', value: token);
+      final u = res.data['user'] as Map<String, dynamic>;
+      _user = AppUser(
+        id: u['id'].toString(),
+        name: u['name'] as String,
+        phone: u['phone'] as String,
+        role: _role(u['role'] as String?),
+        memberId: u['member_id']?.toString(),
+      );
+      return _user;
+    } on DioException catch (e) {
+      throw Exception(_messageFromDio(e, fallback: 'Unable to login. Try again.'));
+    }
   }
 
   @override
@@ -278,12 +350,18 @@ class ApiAppRepository implements AppRepository {
     required String phone,
     required int monthlyAmount,
     String? collectorName,
+    String? email,
+    DateTime? joinedAt,
   }) async {
+    final joined = joinedAt ?? DateTime.now();
     final res = await _dio.post('/members', data: {
       'name': name,
       'phone': phone,
       'monthly_amount': monthlyAmount,
+      'joined_at':
+          '${joined.year.toString().padLeft(4, '0')}-${joined.month.toString().padLeft(2, '0')}-${joined.day.toString().padLeft(2, '0')}',
       if (collectorName != null && collectorName.isNotEmpty) 'collector_name': collectorName,
+      if (email != null && email.isNotEmpty) 'email': email,
     });
     return _mapMember(res.data as Map<String, dynamic>);
   }
@@ -452,6 +530,7 @@ class ApiAppRepository implements AppRepository {
     required DateTime expenseDate,
     PaymentMethod? paymentMethod,
     String? notes,
+    DateTime? periodMonth,
   }) async {
     final res = await _dio.post('/expenses', data: {
       'title': title,
@@ -459,10 +538,22 @@ class ApiAppRepository implements AppRepository {
       'recurrence': recurrence.name,
       'amount': amount,
       'expense_date': expenseDate.toIso8601String().split('T').first,
+      if (periodMonth != null)
+        'period_month':
+            '${periodMonth.year.toString().padLeft(4, '0')}-${periodMonth.month.toString().padLeft(2, '0')}-01',
       if (paymentMethod != null) 'payment_method': _methodToApi(paymentMethod),
       if (notes != null && notes.isNotEmpty) 'notes': notes,
     });
     return _mapExpense(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<List<SalaryHeadDues>> getSalaryDues({String? expenseHeadId}) async {
+    final res = await _dio.get('/expenses/salary-dues', queryParameters: {
+      if (expenseHeadId != null) 'expense_head_id': int.parse(expenseHeadId),
+    });
+    final list = (res.data['data'] as List).cast<Map<String, dynamic>>();
+    return list.map(_mapSalaryHeadDues).toList();
   }
 
   @override
@@ -746,6 +837,30 @@ class ApiAppRepository implements AppRepository {
       paymentMethod: json['payment_method'] == null
           ? null
           : _methodFromApi(json['payment_method'] as String),
+      periodMonth: json['period_month'] != null
+          ? DateTime.tryParse(json['period_month'] as String)
+          : null,
+    );
+  }
+
+  SalaryHeadDues _mapSalaryHeadDues(Map<String, dynamic> json) {
+    final periods = ((json['periods'] as List?) ?? [])
+        .cast<Map<String, dynamic>>()
+        .map(
+          (p) => SalaryPeriod(
+            month: DateTime.parse(p['month'] as String),
+            isPaid: p['status'] == 'paid',
+            expenseId: p['expense_id']?.toString(),
+            amount: p['amount'] as int?,
+          ),
+        )
+        .toList();
+    return SalaryHeadDues(
+      expenseHeadId: json['expense_head_id'].toString(),
+      headName: json['head_name'] as String,
+      dueCount: (json['due_count'] as int?) ??
+          periods.where((p) => !p.isPaid).length,
+      periods: periods,
     );
   }
 

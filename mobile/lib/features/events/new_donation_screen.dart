@@ -79,7 +79,7 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('New Donation')),
+      appBar: const IiasAppBar(title: 'New Donation'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

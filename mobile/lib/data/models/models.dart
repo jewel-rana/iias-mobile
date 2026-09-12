@@ -49,6 +49,34 @@ extension ExpenseRecurrenceX on ExpenseRecurrence {
       };
 }
 
+class SalaryPeriod {
+  const SalaryPeriod({
+    required this.month,
+    required this.isPaid,
+    this.expenseId,
+    this.amount,
+  });
+
+  final DateTime month;
+  final bool isPaid;
+  final String? expenseId;
+  final int? amount;
+}
+
+class SalaryHeadDues {
+  const SalaryHeadDues({
+    required this.expenseHeadId,
+    required this.headName,
+    required this.dueCount,
+    required this.periods,
+  });
+
+  final String expenseHeadId;
+  final String headName;
+  final int dueCount;
+  final List<SalaryPeriod> periods;
+}
+
 class ExpenseHead {
   const ExpenseHead({
     required this.id,
@@ -101,6 +129,8 @@ class Member {
     required this.dueMonths,
     required this.advanceMonths,
     required this.referralCode,
+    this.email,
+    this.joinedAt,
   });
 
   final String id;
@@ -117,6 +147,8 @@ class Member {
   final int dueMonths;
   final int advanceMonths;
   final String referralCode;
+  final String? email;
+  final DateTime? joinedAt;
 }
 
 class MonthlyDue {
@@ -253,6 +285,7 @@ class Expense {
     required this.expenseDate,
     this.notes,
     this.paymentMethod,
+    this.periodMonth,
   });
 
   final String id;
@@ -265,6 +298,7 @@ class Expense {
   final DateTime expenseDate;
   final String? notes;
   final PaymentMethod? paymentMethod;
+  final DateTime? periodMonth;
 }
 
 class DashboardStats {

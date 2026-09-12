@@ -44,8 +44,8 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Organizing Committee'),
+      appBar: IiasAppBar(
+        title: 'Organizing Committee',
         bottom: TabBar(
           controller: _tabs,
           tabs: const [

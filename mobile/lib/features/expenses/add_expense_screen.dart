@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/navigation/back_fallback.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
@@ -35,9 +36,31 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   ExpenseHead? _head;
   ExpenseRecurrence _recurrence = ExpenseRecurrence.monthly;
   DateTime _date = DateTime.now();
+  int _periodMonth = DateTime.now().month;
+  int _periodYear = DateTime.now().year;
+  List<SalaryPeriod> _salaryPeriods = [];
   PaymentMethod? _method = PaymentMethod.cashToCollector;
   bool _loading = false;
   bool _titleTouched = false;
+
+  bool get _isSalary =>
+      _head?.kind == ExpenseHeadKind.salary ||
+      widget.initialKind == ExpenseHeadKind.salary;
+
+  DateTime get _salaryPeriod => DateTime(_periodYear, _periodMonth, 1);
+
+  SalaryPeriod? get _selectedSalaryPeriod {
+    for (final p in _salaryPeriods) {
+      if (p.month.year == _periodYear && p.month.month == _periodMonth) {
+        return p;
+      }
+    }
+    return null;
+  }
+
+  bool get _selectedSalaryPaid => _selectedSalaryPeriod?.isPaid == true;
+
+  int get _dueCount => _salaryPeriods.where((p) => !p.isPaid).length;
 
   @override
   void dispose() {
@@ -50,16 +73,65 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   void _applyHead(ExpenseHead head) {
     setState(() {
       _head = head;
-      _recurrence = head.defaultRecurrence;
+      _recurrence = head.kind == ExpenseHeadKind.salary
+          ? ExpenseRecurrence.monthly
+          : head.defaultRecurrence;
       if (!_titleTouched || _title.text.trim().isEmpty) {
-        final month = DateFormat('MMMM yyyy').format(_date);
         if (head.kind == ExpenseHeadKind.salary) {
-          _title.text = '${head.name} — $month';
+          _title.text =
+              '${head.name} — ${DateFormat('MMMM yyyy').format(_salaryPeriod)}';
         } else if (head.kind == ExpenseHeadKind.festivalBonus) {
           _title.text = head.name;
         } else {
           _title.text = head.name;
         }
+      }
+    });
+    _loadSalaryDues(head);
+  }
+
+  Future<void> _loadSalaryDues(ExpenseHead head) async {
+    if (head.kind != ExpenseHeadKind.salary) {
+      setState(() => _salaryPeriods = []);
+      return;
+    }
+    try {
+      final rows = await ref.read(repositoryProvider).getSalaryDues(
+            expenseHeadId: head.id,
+          );
+      if (!mounted) return;
+      final periods = rows.isEmpty ? <SalaryPeriod>[] : rows.first.periods;
+      SalaryPeriod? firstDue;
+      for (final p in periods) {
+        if (!p.isPaid) {
+          firstDue = p;
+          break;
+        }
+      }
+      setState(() {
+        _salaryPeriods = periods;
+        if (firstDue != null) {
+          _periodMonth = firstDue.month.month;
+          _periodYear = firstDue.month.year;
+          if (!_titleTouched) {
+            _title.text =
+                '${head.name} — ${DateFormat('MMMM yyyy').format(firstDue.month)}';
+          }
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _salaryPeriods = []);
+    }
+  }
+
+  void _setSalaryPeriod(int month, int year) {
+    setState(() {
+      _periodMonth = month;
+      _periodYear = year;
+      if (_head != null && (!_titleTouched || _title.text.trim().isEmpty)) {
+        _title.text =
+            '${_head!.name} — ${DateFormat('MMMM yyyy').format(DateTime(year, month))}';
       }
     });
   }
@@ -73,7 +145,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     );
     if (picked != null) {
       setState(() => _date = picked);
-      if (_head != null && !_titleTouched) _applyHead(_head!);
+      if (_head != null && !_titleTouched && !_isSalary) _applyHead(_head!);
     }
   }
 
@@ -82,6 +154,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     if (_head == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Select an expense head')),
+      );
+      return;
+    }
+    if (_isSalary && _selectedSalaryPaid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Salary for ${DateFormat('MMMM yyyy').format(_salaryPeriod)} is already paid',
+          ),
+        ),
       );
       return;
     }
@@ -95,9 +177,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             expenseDate: _date,
             paymentMethod: _method,
             notes: _notes.text.trim(),
+            periodMonth: _isSalary ? _salaryPeriod : null,
           );
       ref.invalidate(expensesProvider);
       ref.invalidate(dashboardProvider);
+      ref.invalidate(salaryDuesProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Expense recorded')),
@@ -125,17 +209,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(title),
+      appBar: IiasAppBar(
+        title: title,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/expenses');
-            }
-          },
+          onPressed: () => popOrGo(context, '/expenses'),
         ),
         actions: [
           TextButton(
@@ -202,6 +280,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       ),
                       const SizedBox(height: 18),
                       DropdownButtonFormField<ExpenseHead>(
+                        isExpanded: true,
                         value: heads.cast<ExpenseHead?>().firstWhere(
                               (h) => h?.id == _head?.id,
                               orElse: () => heads.first,
@@ -209,6 +288,18 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Expense head',
                         ),
+                        selectedItemBuilder: (context) => heads
+                            .map(
+                              (h) => Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  '${h.name} (${h.kind.label})',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            )
+                            .toList(),
                         items: heads
                             .map(
                               (h) => DropdownMenuItem(
@@ -221,6 +312,111 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           if (h != null) _applyHead(h);
                         },
                       ),
+                      if (_isSalary) ...[
+                        const SizedBox(height: 14),
+                        Text(
+                          'Salary month',
+                          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: DropdownButtonFormField<int>(
+                                isExpanded: true,
+                                value: _periodMonth,
+                                decoration: const InputDecoration(
+                                  labelText: 'Month',
+                                ),
+                                items: List.generate(12, (i) {
+                                  final month = i + 1;
+                                  return DropdownMenuItem(
+                                    value: month,
+                                    child: Text(
+                                      DateFormat('MMMM').format(DateTime(2026, month)),
+                                    ),
+                                  );
+                                }),
+                                onChanged: (m) {
+                                  if (m != null) _setSalaryPeriod(m, _periodYear);
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: DropdownButtonFormField<int>(
+                                isExpanded: true,
+                                value: _periodYear,
+                                decoration: const InputDecoration(
+                                  labelText: 'Year',
+                                ),
+                                items: [
+                                  for (var y = DateTime.now().year - 4;
+                                      y <= DateTime.now().year;
+                                      y++)
+                                    DropdownMenuItem(
+                                      value: y,
+                                      child: Text('$y'),
+                                    ),
+                                ],
+                                onChanged: (y) {
+                                  if (y != null) _setSalaryPeriod(_periodMonth, y);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_dueCount > 0) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            '$_dueCount unpaid salary month${_dueCount == 1 ? '' : 's'} marked due',
+                            style: const TextStyle(
+                              color: AppColors.unpaid,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                        if (_salaryPeriods.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _salaryPeriods.map((p) {
+                              final selected = p.month.year == _periodYear &&
+                                  p.month.month == _periodMonth;
+                              return ChoiceChip(
+                                selected: selected,
+                                label: Text(
+                                  '${DateFormat('MMM yyyy').format(p.month)} · ${p.isPaid ? 'Paid' : 'Due'}',
+                                ),
+                                selectedColor: p.isPaid
+                                    ? AppColors.paid.withValues(alpha: 0.18)
+                                    : AppColors.unpaid.withValues(alpha: 0.18),
+                                labelStyle: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: p.isPaid
+                                      ? AppColors.paid
+                                      : AppColors.unpaid,
+                                ),
+                                onSelected: (_) =>
+                                    _setSalaryPeriod(p.month.month, p.month.year),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        if (_selectedSalaryPaid) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'This month is already paid. Pick a due month.',
+                            style: TextStyle(color: AppColors.unpaid, fontSize: 13),
+                          ),
+                        ],
+                      ],
                       const SizedBox(height: 14),
                       TextFormField(
                         controller: _title,
@@ -284,7 +480,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       const SizedBox(height: 14),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Expense date'),
+                        title: Text(_isSalary ? 'Paid on' : 'Expense date'),
                         subtitle: Text(dateFmt.format(_date)),
                         trailing: const Icon(Icons.calendar_today_rounded),
                         onTap: _pickDate,
@@ -322,9 +518,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 ),
                 const SizedBox(height: 20),
                 AppButton(
-                  label: 'Save Expense',
+                  label: _isSalary ? 'Pay Salary' : 'Save Expense',
                   loading: _loading,
-                  onPressed: _save,
+                  onPressed: _selectedSalaryPaid ? null : _save,
                 ),
               ],
             ),

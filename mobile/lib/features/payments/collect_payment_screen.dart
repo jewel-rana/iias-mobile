@@ -78,7 +78,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     if (member == null) return [];
 
     final items = <({DateTime month, int amount, bool isAdvance, DueStatus? status})>[];
-    final now = DateTime(2026, 9, 1);
+    final now = DateTime(DateTime.now().year, DateTime.now().month, 1);
 
     final unpaid = _dues.where((d) => !d.isFullyPaid).toList()
       ..sort((a, b) => a.billingMonth.compareTo(b.billingMonth));
@@ -92,9 +92,15 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
       ));
     }
 
-    var cursor = _dues.isEmpty
-        ? DateTime(now.year, now.month + 1, 1)
-        : DateTime(_dues.last.billingMonth.year, _dues.last.billingMonth.month + 1, 1);
+    final chronological = [..._dues]
+      ..sort((a, b) => a.billingMonth.compareTo(b.billingMonth));
+    var cursor = chronological.isEmpty
+        ? DateTime(now.year, now.month, 1)
+        : DateTime(
+            chronological.last.billingMonth.year,
+            chronological.last.billingMonth.month + 1,
+            1,
+          );
     var added = 0;
     while (added < 4) {
       final exists = _dues.any(
@@ -110,7 +116,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
         items.add((
           month: cursor,
           amount: member.monthlyAmount,
-          isAdvance: true,
+          isAdvance: cursor.isAfter(now),
           status: null,
         ));
         added++;
@@ -316,7 +322,10 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     if (_busy || _member == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        appBar: IiasAppBar(title: 'Collect Payment'),
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     final member = _member!;
@@ -327,8 +336,8 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(isSelfSubmit ? 'Submit Payment' : 'Collect Payment'),
+      appBar: IiasAppBar(
+        title: isSelfSubmit ? 'Submit Payment' : 'Collect Payment',
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

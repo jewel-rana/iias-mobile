@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/navigation/back_fallback.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/repositories/app_repository.dart';
@@ -87,17 +88,11 @@ class _AddCampaignScreenState extends ConsumerState<AddCampaignScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Add Campaign'),
+      appBar: IiasAppBar(
+        title: 'Add Campaign',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/events');
-            }
-          },
+          onPressed: () => popOrGo(context, '/events'),
         ),
       ),
       body: Form(

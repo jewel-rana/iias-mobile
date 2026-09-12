@@ -20,6 +20,10 @@ final expensesProvider = FutureProvider((ref) {
       );
 });
 
+final salaryDuesProvider = FutureProvider((ref) {
+  return ref.watch(repositoryProvider).getSalaryDues();
+});
+
 class ExpensesScreen extends ConsumerWidget {
   const ExpensesScreen({super.key});
 
@@ -33,8 +37,9 @@ class ExpensesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Expenses'),
+      appBar: IiasAppBar(
+        title: 'Expenses',
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             tooltip: 'Manage heads',
@@ -175,6 +180,53 @@ class ExpensesScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
+          ref.watch(salaryDuesProvider).maybeWhen(
+                data: (dues) {
+                  final dueHeads = dues.where((d) => d.dueCount > 0).toList();
+                  if (dueHeads.isEmpty) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: Material(
+                      color: AppColors.unpaid.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => context.push('/add-expense?kind=salary'),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.warning_amber_rounded,
+                                color: AppColors.unpaid,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  dueHeads
+                                      .map((d) =>
+                                          '${d.headName}: ${d.dueCount} month${d.dueCount == 1 ? '' : 's'} due')
+                                      .join(' · '),
+                                  style: const TextStyle(
+                                    color: AppColors.unpaid,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: AppColors.unpaid,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+                orElse: () => const SizedBox.shrink(),
+              ),
           Expanded(
             child: expensesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -187,6 +239,7 @@ class ExpensesScreen extends ConsumerWidget {
                   onRefresh: () async {
                     ref.invalidate(expensesProvider);
                     ref.invalidate(dashboardProvider);
+                    ref.invalidate(salaryDuesProvider);
                   },
                   child: ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
@@ -234,7 +287,9 @@ class ExpensesScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    dateFmt.format(e.expenseDate),
+                                    e.periodMonth != null
+                                        ? 'Salary month ${DateFormat('MMMM yyyy').format(e.periodMonth!)} · Paid ${dateFmt.format(e.expenseDate)}'
+                                        : dateFmt.format(e.expenseDate),
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 12,

@@ -32,16 +32,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _submit() async {
     setState(() => _loading = true);
-    final ok = await ref.read(authStateProvider.notifier).login(
-          _phone.text.trim(),
-          _password.text,
+    try {
+      final ok = await ref.read(authStateProvider.notifier).login(
+            _phone.text.trim(),
+            _password.text,
+          );
+      if (!mounted) return;
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to login. Try again.')),
         );
-    if (!mounted) return;
-    setState(() => _loading = false);
-    if (!ok) {
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final message = e.toString().replaceFirst(RegExp(r'^Exception: '), '');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to login. Try again.')),
+        SnackBar(content: Text(message)),
       );
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 

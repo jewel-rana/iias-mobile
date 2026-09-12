@@ -19,7 +19,7 @@ class ExpenseHeadsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Expense Heads')),
+      appBar: const IiasAppBar(title: 'Expense Heads'),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openEditor(context, ref),
         icon: const Icon(Icons.add),

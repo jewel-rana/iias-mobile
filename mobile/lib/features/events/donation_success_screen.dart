@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/receipt_share.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
+import '../payments/receipt_screen.dart';
 
 class DonationSuccessScreen extends StatelessWidget {
   const DonationSuccessScreen({super.key, required this.donation});
@@ -14,6 +16,7 @@ class DonationSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const IiasAppBar(title: 'Donation Received'),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -51,7 +54,35 @@ class DonationSuccessScreen extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              AppButton(label: 'Share WhatsApp', outlined: true, onPressed: () {}),
+              AppButton(
+                label: 'Share WhatsApp',
+                outlined: true,
+                onPressed: () async {
+                  final opened =
+                      await shareViaWhatsApp(donationReceiptMessage(donation));
+                  if (!context.mounted) return;
+                  if (!opened) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'WhatsApp is not available. Receipt copied.',
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              AppButton(
+                label: 'View Receipt',
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ReceiptScreen.donation(donation: donation),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 10),
               AppButton(label: 'Back to Funds', onPressed: () => context.go('/events')),
             ],
