@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/navigation/app_navigator.dart';
 import '../../core/navigation/back_fallback.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
@@ -23,6 +24,7 @@ import '../more/committee_screen.dart';
 import '../more/join_requests_screen.dart';
 import '../more/more_screen.dart';
 import '../more/organization_settings_screen.dart';
+import '../notifications/notifications_screen.dart';
 import '../payments/collect_payment_screen.dart';
 import '../payments/collection_screen.dart';
 import '../payments/payment_approvals_screen.dart';
@@ -32,8 +34,6 @@ import '../reports/monthly_members_screen.dart';
 import '../reports/reports_screen.dart';
 import '../shell/main_shell.dart';
 
-final _rootKey = GlobalKey<NavigatorState>();
-
 GoRoute _overlay({
   required String path,
   required String fallback,
@@ -41,7 +41,7 @@ GoRoute _overlay({
 }) {
   return GoRoute(
     path: path,
-    parentNavigatorKey: _rootKey,
+    parentNavigatorKey: appNavigatorKey,
     builder: (context, state) => BackFallback(
       fallback: fallback,
       child: builder(context, state),
@@ -51,7 +51,7 @@ GoRoute _overlay({
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    navigatorKey: _rootKey,
+    navigatorKey: appNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
@@ -176,6 +176,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/expense-heads',
         fallback: '/more',
         builder: (_, __) => const ExpenseHeadsScreen(),
+      ),
+      _overlay(
+        path: '/notifications',
+        fallback: '/dashboard',
+        builder: (_, __) => const NotificationsScreen(),
       ),
       _overlay(
         path: '/join-requests',

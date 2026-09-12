@@ -7,6 +7,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
 import '../members/members_screen.dart';
+import '../notifications/notifications_screen.dart';
 
 final dashboardProvider = FutureProvider((ref) {
   return ref.watch(repositoryProvider).getDashboard();
@@ -39,11 +40,8 @@ class DashboardScreen extends ConsumerWidget {
       appBar: IiasAppBar(
         title: 'Dashboard',
         automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_none_rounded),
-          ),
+        actions: const [
+          NotificationBell(),
         ],
       ),
       body: RefreshIndicator(

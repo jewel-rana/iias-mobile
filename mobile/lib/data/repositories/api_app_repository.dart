@@ -308,6 +308,26 @@ class ApiAppRepository implements AppRepository {
   }
 
   @override
+  Future<void> registerDeviceToken({
+    required String token,
+    String? platform,
+    String? deviceId,
+  }) async {
+    await _dio.post('/device-tokens', data: {
+      'token': token,
+      'platform': ?platform,
+      'device_id': ?deviceId,
+    });
+  }
+
+  @override
+  Future<void> unregisterDeviceToken(String token) async {
+    try {
+      await _dio.delete('/device-tokens', queryParameters: {'token': token});
+    } catch (_) {}
+  }
+
+  @override
   Future<DashboardStats> getDashboard() async {
     final res = await _dio.get('/dashboard');
     final d = res.data as Map<String, dynamic>;

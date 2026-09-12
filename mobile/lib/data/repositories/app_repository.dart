@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/push/push_service.dart';
 import '../mock/mock_data.dart';
 import '../models/models.dart';
 import 'api_app_repository.dart';
@@ -11,6 +13,12 @@ abstract class AppRepository {
   Future<void> logout();
   Future<AppUser?> restoreSession();
   AppUser? get currentUser;
+  Future<void> registerDeviceToken({
+    required String token,
+    String? platform,
+    String? deviceId,
+  });
+  Future<void> unregisterDeviceToken(String token);
   Future<DashboardStats> getDashboard();
   Future<List<Member>> getMembers({String query = '', MemberPaymentStatus? status});
   Future<Member?> getMember(String id);
@@ -152,6 +160,16 @@ class MockAppRepository implements AppRepository {
 
   @override
   Future<AppUser?> restoreSession() async => _user;
+
+  @override
+  Future<void> registerDeviceToken({
+    required String token,
+    String? platform,
+    String? deviceId,
+  }) async {}
+
+  @override
+  Future<void> unregisterDeviceToken(String token) async {}
 
   @override
   Future<DashboardStats> getDashboard() async {
@@ -810,18 +828,41 @@ class AuthController extends StateNotifier<AppUser?> {
     _restored = true;
     final user = await _repo.restoreSession();
     state = user;
+    if (user != null) {
+      await _syncPushToken();
+    }
   }
 
   Future<bool> login(String phone, String password) async {
     final user = await _repo.login(phone, password);
     if (user == null) return false;
     state = user;
+    await _syncPushToken();
     return true;
   }
 
   Future<void> logout() async {
+    PushService.instance.onTokenRefresh = null;
+    final token = PushService.instance.token;
+    if (token != null) {
+      await _repo.unregisterDeviceToken(token);
+    }
     await _repo.logout();
     state = null;
+  }
+
+  Future<void> _syncPushToken() async {
+    final push = PushService.instance;
+    push.onTokenRefresh = (token) {
+      _repo.registerDeviceToken(token: token, platform: push.platform);
+    };
+    final token = push.token;
+    if (token == null || token.isEmpty) return;
+    try {
+      await _repo.registerDeviceToken(token: token, platform: push.platform);
+    } catch (e) {
+      debugPrint('Device token register failed: $e');
+    }
   }
 }
 

@@ -18,75 +18,108 @@ class DonationSuccessScreen extends StatelessWidget {
     return Scaffold(
       appBar: const IiasAppBar(title: 'Donation Received'),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              const SizedBox(height: 24),
-              Container(
-                height: 88,
-                width: 88,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.favorite_rounded, color: AppColors.primary, size: 44),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Donation Received',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              MoneyText(donation.amount, style: Theme.of(context).textTheme.headlineMedium),
-              Text(donation.eventTitle, style: const TextStyle(color: AppColors.textSecondary)),
-              const SizedBox(height: 20),
-              SectionCard(
+        top: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight - 40),
                 child: Column(
                   children: [
-                    _row('Receipt', donation.receiptNumber),
-                    _row('Donor', donation.donorName),
-                    _row('Type', donation.donorType == DonorType.member ? 'Member' : 'Non-member'),
-                    if (donation.referredByName != null)
-                      _row('Referred by', donation.referredByName!),
-                    _row('Date', DateFormat('dd MMM yyyy').format(donation.date)),
+                    Container(
+                      height: 88,
+                      width: 88,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primaryLight,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.favorite_rounded,
+                        color: AppColors.primary,
+                        size: 44,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Donation Received',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 8),
+                    MoneyText(
+                      donation.amount,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    Text(
+                      donation.eventTitle,
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 20),
+                    SectionCard(
+                      child: Column(
+                        children: [
+                          _row('Receipt', donation.receiptNumber),
+                          _row('Donor', donation.donorName),
+                          _row(
+                            'Type',
+                            donation.donorType == DonorType.member
+                                ? 'Member'
+                                : 'Non-member',
+                          ),
+                          if (donation.referredByName != null)
+                            _row('Referred by', donation.referredByName!),
+                          _row(
+                            'Date',
+                            DateFormat('dd MMM yyyy').format(donation.date),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    AppButton(
+                      label: 'Share WhatsApp',
+                      outlined: true,
+                      onPressed: () async {
+                        final opened = await shareViaWhatsApp(
+                          donationReceiptMessage(donation),
+                        );
+                        if (!context.mounted) return;
+                        if (!opened) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'WhatsApp is not available. Receipt copied.',
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    AppButton(
+                      label: 'View Receipt',
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ReceiptScreen.donation(donation: donation),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    AppButton(
+                      label: 'Back to Funds',
+                      onPressed: () => context.go('/events'),
+                    ),
                   ],
                 ),
               ),
-              const Spacer(),
-              AppButton(
-                label: 'Share WhatsApp',
-                outlined: true,
-                onPressed: () async {
-                  final opened =
-                      await shareViaWhatsApp(donationReceiptMessage(donation));
-                  if (!context.mounted) return;
-                  if (!opened) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'WhatsApp is not available. Receipt copied.',
-                        ),
-                      ),
-                    );
-                  }
-                },
-              ),
-              const SizedBox(height: 10),
-              AppButton(
-                label: 'View Receipt',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ReceiptScreen.donation(donation: donation),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 10),
-              AppButton(label: 'Back to Funds', onPressed: () => context.go('/events')),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
