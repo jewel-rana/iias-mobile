@@ -91,7 +91,8 @@ class ApiAppRepository implements AppRepository {
   AppUser _mapUser(Map<String, dynamic> u) => AppUser(
         id: u['id'].toString(),
         name: u['name'] as String,
-        phone: u['phone'] as String,
+        phone: u['phone'] as String? ?? '',
+        email: u['email'] as String?,
         role: _role(u['role'] as String?),
         roleName: u['role_name'] as String?,
         memberId: u['member_id']?.toString(),
@@ -329,6 +330,29 @@ class ApiAppRepository implements AppRepository {
   }
 
   @override
+  Future<AppUser> updateProfile({
+    String? name,
+    String? phone,
+    String? email,
+    String? currentPassword,
+    String? password,
+    String? passwordConfirmation,
+  }) async {
+    final res = await _dio.put('/me', data: {
+      if (name != null) 'name': name,
+      if (phone != null) 'phone': phone,
+      if (email != null) 'email': email,
+      if (currentPassword != null && currentPassword.isNotEmpty)
+        'current_password': currentPassword,
+      if (password != null && password.isNotEmpty) 'password': password,
+      if (passwordConfirmation != null && passwordConfirmation.isNotEmpty)
+        'password_confirmation': passwordConfirmation,
+    });
+    _user = _mapUser(res.data as Map<String, dynamic>);
+    return _user!;
+  }
+
+  @override
   Future<AppUser?> restoreSession() async {
     final token = await _storage.read(key: 'auth_token');
     if (token == null || token.isEmpty) {
@@ -435,11 +459,15 @@ class ApiAppRepository implements AppRepository {
   @override
   Future<Member> updateMember({
     required String id,
+    String? name,
+    String? phone,
     String? email,
     String? roleId,
     int? monthlyAmount,
   }) async {
     final res = await _dio.put('/members/$id', data: {
+      if (name != null) 'name': name,
+      if (phone != null) 'phone': phone,
       if (email != null) 'email': email,
       if (roleId != null && roleId.isNotEmpty) 'role_id': int.tryParse(roleId) ?? roleId,
       if (monthlyAmount != null) 'monthly_amount': monthlyAmount,

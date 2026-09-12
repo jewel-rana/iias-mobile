@@ -49,6 +49,17 @@ class AppLocalizations {
       );
   String get resetCode => _t('6-digit code', '৬ সংখ্যার কোড');
   String get newPassword => _t('New password', 'নতুন পাসওয়ার্ড');
+  String get currentPassword => _t('Current password', 'বর্তমান পাসওয়ার্ড');
+  String get editProfile => _t('Edit profile', 'প্রোফাইল সম্পাদনা');
+  String get profileSaved => _t('Profile saved', 'প্রোফাইল সংরক্ষিত');
+  String get changePasswordOptional =>
+      _t('Change password (optional)', 'পাসওয়ার্ড পরিবর্তন (ঐচ্ছিক)');
+  String get leavePasswordBlank => _t(
+        'Leave blank to keep your current password.',
+        'বর্তমান পাসওয়ার্ড রাখতে খালি রাখুন।',
+      );
+  String couldNotSaveProfile(Object e) =>
+      _t('Could not save profile: $e', 'প্রোফাইল সংরক্ষণ যায়নি: $e');
   String get confirmPassword => _t('Confirm password', 'পাসওয়ার্ড নিশ্চিত করুন');
   String get resetPasswordAction => _t('Update password', 'পাসওয়ার্ড আপডেট');
   String get resendCode => _t('Resend code', 'আবার কোড পাঠান');

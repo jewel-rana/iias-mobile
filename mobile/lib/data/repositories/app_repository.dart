@@ -28,6 +28,14 @@ abstract class AppRepository {
   Future<void> logout();
   Future<AppUser?> restoreSession();
   AppUser? get currentUser;
+  Future<AppUser> updateProfile({
+    String? name,
+    String? phone,
+    String? email,
+    String? currentPassword,
+    String? password,
+    String? passwordConfirmation,
+  });
   Future<void> registerDeviceToken({
     required String token,
     String? platform,
@@ -52,6 +60,8 @@ abstract class AppRepository {
   });
   Future<Member> updateMember({
     required String id,
+    String? name,
+    String? phone,
     String? email,
     String? roleId,
     int? monthlyAmount,
@@ -265,6 +275,55 @@ class MockAppRepository implements AppRepository {
   }
 
   @override
+  Future<AppUser> updateProfile({
+    String? name,
+    String? phone,
+    String? email,
+    String? currentPassword,
+    String? password,
+    String? passwordConfirmation,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    final current = _user;
+    if (current == null) {
+      throw Exception('Not signed in');
+    }
+    _user = current.copyWith(
+      name: name ?? current.name,
+      phone: phone ?? current.phone,
+      email: email ?? current.email,
+    );
+    if (current.memberId != null) {
+      final idx = _members.indexWhere((m) => m.id == current.memberId);
+      if (idx >= 0) {
+        final m = _members[idx];
+        _members[idx] = Member(
+          id: m.id,
+          memberCode: m.memberCode,
+          name: name ?? m.name,
+          phone: phone ?? m.phone,
+          monthlyAmount: m.monthlyAmount,
+          collectorName: m.collectorName,
+          status: m.status,
+          totalPaid: m.totalPaid,
+          outstanding: m.outstanding,
+          advance: m.advance,
+          paidMonths: m.paidMonths,
+          dueMonths: m.dueMonths,
+          advanceMonths: m.advanceMonths,
+          referralCode: m.referralCode,
+          email: email ?? m.email,
+          joinedAt: m.joinedAt,
+          roleId: m.roleId,
+          roleName: m.roleName,
+          roleCode: m.roleCode,
+        );
+      }
+    }
+    return _user!;
+  }
+
+  @override
   Future<AppUser?> restoreSession() async => _user;
 
   @override
@@ -377,6 +436,8 @@ class MockAppRepository implements AppRepository {
   @override
   Future<Member> updateMember({
     required String id,
+    String? name,
+    String? phone,
     String? email,
     String? roleId,
     int? monthlyAmount,
@@ -389,8 +450,8 @@ class MockAppRepository implements AppRepository {
     final updated = Member(
       id: current.id,
       memberCode: current.memberCode,
-      name: current.name,
-      phone: current.phone,
+      name: name ?? current.name,
+      phone: phone ?? current.phone,
       monthlyAmount: monthlyAmount ?? current.monthlyAmount,
       collectorName: current.collectorName,
       status: current.status,
@@ -1161,6 +1222,25 @@ class AuthController extends StateNotifier<AppUser?> {
     }
     await _repo.logout();
     state = null;
+  }
+
+  Future<void> updateProfile({
+    String? name,
+    String? phone,
+    String? email,
+    String? currentPassword,
+    String? password,
+    String? passwordConfirmation,
+  }) async {
+    final user = await _repo.updateProfile(
+      name: name,
+      phone: phone,
+      email: email,
+      currentPassword: currentPassword,
+      password: password,
+      passwordConfirmation: passwordConfirmation,
+    );
+    state = user;
   }
 
   Future<void> _syncPushToken() async {

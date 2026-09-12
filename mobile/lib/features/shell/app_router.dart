@@ -39,6 +39,7 @@ import '../payments/collection_screen.dart';
 import '../payments/payment_approvals_screen.dart';
 import '../payments/payment_detail_screen.dart';
 import '../payments/payment_success_screen.dart';
+import '../profile/edit_profile_screen.dart';
 import '../profile/member_home_screen.dart';
 import '../reports/monthly_members_screen.dart';
 import '../reports/reports_screen.dart';
@@ -279,6 +280,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(path: '/member-home', builder: (_, __) => const MemberHomeScreen()),
+      GoRoute(
+        path: '/profile',
+        parentNavigatorKey: appNavigatorKey,
+        builder: (_, __) => const EditProfileScreen(),
+      ),
     ],
   );
 });

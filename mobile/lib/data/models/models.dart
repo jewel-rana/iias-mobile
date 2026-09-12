@@ -103,6 +103,7 @@ class AppUser {
     required this.name,
     required this.phone,
     required this.role,
+    this.email,
     this.roleName,
     this.memberId,
     this.permissions = const [],
@@ -112,6 +113,7 @@ class AppUser {
   final String name;
   final String phone;
   final UserRole role;
+  final String? email;
   final String? roleName;
   final String? memberId;
   final List<String> permissions;
@@ -138,6 +140,28 @@ class AppUser {
   String get roleLabel => (roleName != null && roleName!.isNotEmpty)
       ? roleName!
       : role.name;
+
+  AppUser copyWith({
+    String? id,
+    String? name,
+    String? phone,
+    UserRole? role,
+    String? email,
+    String? roleName,
+    String? memberId,
+    List<String>? permissions,
+  }) {
+    return AppUser(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      phone: phone ?? this.phone,
+      role: role ?? this.role,
+      email: email ?? this.email,
+      roleName: roleName ?? this.roleName,
+      memberId: memberId ?? this.memberId,
+      permissions: permissions ?? this.permissions,
+    );
+  }
 }
 
 class AppPermission {

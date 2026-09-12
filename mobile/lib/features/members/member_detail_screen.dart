@@ -141,7 +141,7 @@ class MemberDetailScreen extends ConsumerWidget {
                           ),
                           if (member.email != null && member.email!.isNotEmpty)
                             InkWell(
-                              onTap: canSetRole ? () => _setEmail(context, ref, member) : null,
+                              onTap: canSetRole ? () => _editMember(context, ref, member) : null,
                               child: Text(
                                 member.email!,
                                 style: const TextStyle(color: AppColors.textSecondary),
@@ -149,7 +149,7 @@ class MemberDetailScreen extends ConsumerWidget {
                             )
                           else if (canSetRole)
                             TextButton(
-                              onPressed: () => _setEmail(context, ref, member),
+                              onPressed: () => _editMember(context, ref, member),
                               child: Text(l10n.addEmail),
                             ),
                           if (member.joinedAt != null)
@@ -361,43 +361,66 @@ Future<void> _editMember(BuildContext context, WidgetRef ref, Member member) asy
   var selected = roles.any((r) => r.id == member.roleId)
       ? member.roleId
       : roles.where((r) => r.code == 'member').firstOrNull?.id ?? roles.first.id;
+  final nameCtrl = TextEditingController(text: member.name);
+  final phoneCtrl = TextEditingController(text: member.phone);
+  final emailCtrl = TextEditingController(text: member.email ?? '');
   final amountCtrl = TextEditingController(text: '${member.monthlyAmount}');
   final saved = await showDialog<bool>(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setModal) => AlertDialog(
         title: Text(l10n.editMember),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            InputDecorator(
-              decoration: InputDecoration(labelText: l10n.loginRole),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: selected,
-                  items: roles
-                      .map(
-                        (r) => DropdownMenuItem(
-                          value: r.id,
-                          child: Text(r.name),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setModal(() => selected = v),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(labelText: l10n.fullName),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(labelText: l10n.phoneNumber),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(labelText: l10n.email),
+              ),
+              const SizedBox(height: 14),
+              InputDecorator(
+                decoration: InputDecoration(labelText: l10n.loginRole),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: selected,
+                    items: roles
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r.id,
+                            child: Text(r.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setModal(() => selected = v),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: amountCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: l10n.monthlyDonation,
-                prefixText: '৳  ',
+              const SizedBox(height: 14),
+              TextField(
+                controller: amountCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: l10n.monthlyDonation,
+                  prefixText: '৳  ',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -412,9 +435,33 @@ Future<void> _editMember(BuildContext context, WidgetRef ref, Member member) asy
       ),
     ),
   );
+  final name = nameCtrl.text.trim();
+  final phone = phoneCtrl.text.trim();
+  final email = emailCtrl.text.trim();
   final amount = int.tryParse(amountCtrl.text.trim());
+  nameCtrl.dispose();
+  phoneCtrl.dispose();
+  emailCtrl.dispose();
   amountCtrl.dispose();
   if (saved != true || !context.mounted) return;
+  if (name.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.nameRequired)),
+    );
+    return;
+  }
+  if (phone.length < 10) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.enterValidPhone)),
+    );
+    return;
+  }
+  if (email.isEmpty || !email.contains('@') || !email.contains('.')) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.enterValidEmail)),
+    );
+    return;
+  }
   if (amount == null || amount < 1) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.enterValidAmount)),
@@ -424,6 +471,9 @@ Future<void> _editMember(BuildContext context, WidgetRef ref, Member member) asy
   try {
     await ref.read(repositoryProvider).updateMember(
           id: member.id,
+          name: name,
+          phone: phone,
+          email: email,
           roleId: selected,
           monthlyAmount: amount,
         );
@@ -433,47 +483,6 @@ Future<void> _editMember(BuildContext context, WidgetRef ref, Member member) asy
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.memberUpdated)),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(e.toString().replaceFirst(RegExp(r'^Exception: '), ''))),
-    );
-  }
-}
-
-Future<void> _setEmail(BuildContext context, WidgetRef ref, Member member) async {
-  final l10n = context.l10n;
-  final controller = TextEditingController(text: member.email ?? '');
-  final email = await showDialog<String>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text(l10n.email),
-      content: TextField(
-        controller: controller,
-        keyboardType: TextInputType.emailAddress,
-        autofocus: true,
-        decoration: const InputDecoration(hintText: 'name@example.com'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.cancel),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context, controller.text.trim()),
-          child: Text(l10n.save),
-        ),
-      ],
-    ),
-  );
-  if (email == null || email.isEmpty || !context.mounted) return;
-  try {
-    await ref.read(repositoryProvider).updateMember(id: member.id, email: email);
-    ref.invalidate(memberDetailProvider(member.id));
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.emailSaved)),
     );
   } catch (e) {
     if (!context.mounted) return;

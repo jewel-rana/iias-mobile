@@ -53,6 +53,11 @@ class MemberHomeScreen extends ConsumerWidget {
             automaticallyImplyLeading: false,
             actions: [
               IconButton(
+                tooltip: context.l10n.editProfile,
+                onPressed: () => context.push('/profile'),
+                icon: const Icon(Icons.edit_outlined),
+              ),
+              IconButton(
                 onPressed: () async {
                   await ref.read(authStateProvider.notifier).logout();
                   if (context.mounted) context.go('/login');
@@ -209,6 +214,8 @@ class MemberHomeScreen extends ConsumerWidget {
                 context.push('/collect/$memberId');
               } else if (index == 2) {
                 context.push('/events');
+              } else if (index == 3) {
+                context.push('/profile');
               }
             },
           ),

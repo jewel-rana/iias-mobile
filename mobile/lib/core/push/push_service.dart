@@ -28,6 +28,7 @@ const _allowedRoutes = {
   '/join-requests',
   '/meetings',
   '/open-meeting',
+  '/profile',
 };
 
 @pragma('vm:entry-point')

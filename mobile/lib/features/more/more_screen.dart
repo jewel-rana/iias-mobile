@@ -37,6 +37,8 @@ class MoreScreen extends ConsumerWidget {
               subtitle: Text(
                 '${user?.roleLabel ?? l10n.user} · ${user?.phone ?? ''}',
               ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/profile'),
             ),
           ),
           const SizedBox(height: 12),
