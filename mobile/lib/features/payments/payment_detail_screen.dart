@@ -169,8 +169,10 @@ class _PaymentDetailBody extends ConsumerWidget {
                     payment.method == PaymentMethod.handCash ? l10n.receivedBy : l10n.collector,
                     payment.collectorName!,
                   ),
+                if (payment.organizationWalletDisplay != null)
+                  _row(l10n.organizationWalletTo, payment.organizationWalletDisplay!),
                 if (payment.walletAccount != null && payment.walletAccount!.isNotEmpty)
-                  _row(l10n.walletAccount, payment.walletAccount!),
+                  _row(l10n.customerWalletFrom, payment.walletAccount!),
                 if (payment.transactionId != null && payment.transactionId!.isNotEmpty)
                   _row(l10n.transactionId, payment.transactionId!),
                 if (payment.rejectionReason != null && payment.rejectionReason!.isNotEmpty)

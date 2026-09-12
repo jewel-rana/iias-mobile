@@ -97,9 +97,11 @@ class PaymentSuccessScreen extends StatelessWidget {
                           _row(l10n.date, DateFormat('dd MMM yyyy', locale).format(payment.date)),
                           _row(l10n.method, l10n.paymentMethodName(payment.method)),
                           if (payment.method == PaymentMethod.mobileWallet) ...[
+                            if (payment.organizationWalletDisplay != null)
+                              _row(l10n.organizationWalletTo, payment.organizationWalletDisplay!),
                             if (payment.walletAccount != null &&
                                 payment.walletAccount!.isNotEmpty)
-                              _row(l10n.walletAccount, payment.walletAccount!),
+                              _row(l10n.customerWalletFrom, payment.walletAccount!),
                             if (payment.transactionId != null &&
                                 payment.transactionId!.isNotEmpty)
                               _row(l10n.transactionId, payment.transactionId!),

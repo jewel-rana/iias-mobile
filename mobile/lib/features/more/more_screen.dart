@@ -41,6 +41,19 @@ class MoreScreen extends ConsumerWidget {
               onTap: () => context.push('/profile'),
             ),
           ),
+          if (user?.memberId != null && user!.memberId!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            SectionCard(
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.person_pin_rounded),
+                title: Text(l10n.myPayment),
+                subtitle: Text(l10n.submitPayment),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/collect/${user.memberId}'),
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           SectionCard(
             child: Column(

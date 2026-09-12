@@ -217,6 +217,8 @@ class ApiAppRepository implements AppRepository {
         status: _paymentStatus(json['status'] as String?),
         collectorName: json['collector_name'] as String?,
         walletAccount: json['wallet_account'] as String?,
+        organizationWalletLabel: json['organization_wallet_label'] as String?,
+        organizationWalletNumber: json['organization_wallet_number'] as String?,
         transactionId: (json['transaction_reference'] as String?) ??
             (json['transaction_id'] as String?),
         rejectionReason: json['rejection_reason'] as String?,
@@ -501,6 +503,8 @@ class ApiAppRepository implements AppRepository {
     required List<PaymentAllocation> allocations,
     String? collectorName,
     String? walletAccount,
+    String? organizationWalletLabel,
+    String? organizationWalletNumber,
     String? transactionId,
   }) async {
     final res = await _dio.post('/payments', data: {
@@ -510,6 +514,10 @@ class ApiAppRepository implements AppRepository {
       'idempotency_key': _uuid.v4(),
       if (collectorName != null && collectorName.isNotEmpty) 'collector_name': collectorName,
       if (walletAccount != null && walletAccount.isNotEmpty) 'wallet_account': walletAccount,
+      if (organizationWalletLabel != null && organizationWalletLabel.isNotEmpty)
+        'organization_wallet_label': organizationWalletLabel,
+      if (organizationWalletNumber != null && organizationWalletNumber.isNotEmpty)
+        'organization_wallet_number': organizationWalletNumber,
       if (transactionId != null && transactionId.isNotEmpty) 'transaction_reference': transactionId,
       'allocations': allocations
           .map((a) => {
@@ -871,6 +879,9 @@ class ApiAppRepository implements AppRepository {
       'currency_symbol': settings.currencySymbol,
       'referral_enabled': settings.referralEnabled,
       'public_join_enabled': settings.publicJoinEnabled,
+      'wallets': settings.wallets
+          .map((w) => {'label': w.label, 'number': w.number})
+          .toList(),
     });
     return _mapSettings(res.data as Map<String, dynamic>);
   }
@@ -1135,6 +1146,14 @@ class ApiAppRepository implements AppRepository {
       currencySymbol: (json['currency_symbol'] as String?) ?? '৳',
       referralEnabled: json['referral_enabled'] == true,
       publicJoinEnabled: json['public_join_enabled'] != false,
+      wallets: ((json['wallets'] as List?) ?? [])
+          .whereType<Map>()
+          .map((w) => OrganizationWallet(
+                label: (w['label'] as String?) ?? '',
+                number: (w['number'] as String?) ?? '',
+              ))
+          .where((w) => w.number.trim().isNotEmpty)
+          .toList(),
     );
   }
 

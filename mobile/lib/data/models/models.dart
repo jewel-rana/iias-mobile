@@ -297,6 +297,8 @@ class PaymentRecord {
     this.status = PaymentStatus.confirmed,
     this.collectorName,
     this.walletAccount,
+    this.organizationWalletLabel,
+    this.organizationWalletNumber,
     this.transactionId,
     this.rejectionReason,
   });
@@ -312,11 +314,20 @@ class PaymentRecord {
   final PaymentStatus status;
   final String? collectorName;
   final String? walletAccount;
+  final String? organizationWalletLabel;
+  final String? organizationWalletNumber;
   final String? transactionId;
   final String? rejectionReason;
 
   bool get isPending => status == PaymentStatus.pending;
   bool get isConfirmed => status == PaymentStatus.confirmed;
+
+  String? get organizationWalletDisplay {
+    final number = organizationWalletNumber?.trim() ?? '';
+    if (number.isEmpty) return null;
+    final label = organizationWalletLabel?.trim() ?? '';
+    return label.isEmpty ? number : '$label · $number';
+  }
 }
 
 class PaymentAllocation {
@@ -470,6 +481,25 @@ class JoinRequest {
   final String? rejectionReason;
 }
 
+class OrganizationWallet {
+  const OrganizationWallet({
+    required this.label,
+    required this.number,
+  });
+
+  final String label;
+  final String number;
+
+  String get display => label.trim().isEmpty ? number : '$label · $number';
+
+  @override
+  bool operator ==(Object other) =>
+      other is OrganizationWallet && other.label == label && other.number == number;
+
+  @override
+  int get hashCode => Object.hash(label, number);
+}
+
 class OrganizationSettings {
   const OrganizationSettings({
     required this.organizationName,
@@ -480,6 +510,7 @@ class OrganizationSettings {
     required this.currencySymbol,
     required this.referralEnabled,
     required this.publicJoinEnabled,
+    this.wallets = const [],
   });
 
   final String organizationName;
@@ -490,6 +521,7 @@ class OrganizationSettings {
   final String currencySymbol;
   final bool referralEnabled;
   final bool publicJoinEnabled;
+  final List<OrganizationWallet> wallets;
 
   OrganizationSettings copyWith({
     String? organizationName,
@@ -500,6 +532,7 @@ class OrganizationSettings {
     String? currencySymbol,
     bool? referralEnabled,
     bool? publicJoinEnabled,
+    List<OrganizationWallet>? wallets,
   }) {
     return OrganizationSettings(
       organizationName: organizationName ?? this.organizationName,
@@ -510,6 +543,7 @@ class OrganizationSettings {
       currencySymbol: currencySymbol ?? this.currencySymbol,
       referralEnabled: referralEnabled ?? this.referralEnabled,
       publicJoinEnabled: publicJoinEnabled ?? this.publicJoinEnabled,
+      wallets: wallets ?? this.wallets,
     );
   }
 }

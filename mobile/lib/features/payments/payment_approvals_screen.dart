@@ -221,9 +221,19 @@ class PaymentApprovalsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 8),
                             MoneyText(p.amount),
+                            if (p.organizationWalletDisplay != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                '${l10n.organizationWalletTo}: ${p.organizationWalletDisplay}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
                             if (p.walletAccount != null && p.walletAccount!.isNotEmpty) ...[
                               const SizedBox(height: 4),
-                              Text(l10n.walletLine(p.walletAccount!), style: const TextStyle(fontSize: 12)),
+                              Text(
+                                '${l10n.customerWalletFrom}: ${p.walletAccount}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
                             ],
                             if (p.transactionId != null && p.transactionId!.isNotEmpty) ...[
                               const SizedBox(height: 2),

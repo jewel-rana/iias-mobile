@@ -27,8 +27,11 @@ String paymentReceiptMessage(PaymentRecord payment) {
 
   final extra = <String>[
     if (payment.method == PaymentMethod.mobileWallet &&
+        payment.organizationWalletDisplay != null)
+      'To: ${payment.organizationWalletDisplay}',
+    if (payment.method == PaymentMethod.mobileWallet &&
         (payment.walletAccount?.isNotEmpty ?? false))
-      'Wallet: ${payment.walletAccount}',
+      'From: ${payment.walletAccount}',
     if (payment.method == PaymentMethod.mobileWallet &&
         (payment.transactionId?.isNotEmpty ?? false))
       'Txn ID: ${payment.transactionId}',

@@ -71,6 +71,12 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
         title: l10n.collection,
         automaticallyImplyLeading: false,
         actions: [
+          if (selfMemberId != null && selfMemberId.isNotEmpty)
+            IconButton(
+              tooltip: l10n.myPayment,
+              onPressed: () => context.push('/collect/$selfMemberId'),
+              icon: const Icon(Icons.person_pin_rounded),
+            ),
           if (canCollectForOthers || (selfMemberId != null && selfMemberId.isNotEmpty))
             IconButton(
               tooltip: canCollectForOthers ? l10n.addPayment : l10n.submitPayment,
@@ -283,6 +289,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
       members = const [];
     }
     if (!context.mounted) return;
+    final self = _selfMember(members, user);
     final selected = await showModalBottomSheet<Member>(
       context: context,
       isScrollControlled: true,
@@ -296,6 +303,12 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
           builder: (context, setModalState) {
             final l10n = context.l10n;
             final filtered = filterMembers(members, query: query);
+            final others = self == null
+                ? filtered
+                : filtered.where((m) => m.id != self.id).toList();
+            final showSelf = self != null &&
+                (query.trim().isEmpty ||
+                    filtered.any((m) => m.id == self.id));
             return SafeArea(
               child: SizedBox(
                 height: MediaQuery.sizeOf(context).height * 0.7,
@@ -332,35 +345,28 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     ),
                     const SizedBox(height: 8),
                     Expanded(
-                      child: filtered.isEmpty
+                      child: (!showSelf && others.isEmpty)
                           ? EmptyState(message: l10n.noMembersFound)
                           : ListView.separated(
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                              itemCount: filtered.length,
+                              itemCount: others.length + (showSelf ? 1 : 0),
                               separatorBuilder: (_, __) => const SizedBox(height: 8),
                               itemBuilder: (context, index) {
-                                final m = filtered[index];
-                                return ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: CircleAvatar(
-                                    backgroundColor: AppColors.primaryLight,
-                                    child: Text(
-                                      m.name.trim().isEmpty
-                                          ? '?'
-                                          : m.name.trim().characters.first.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ),
-                                  title: Text(
-                                    m.name,
-                                    style: const TextStyle(fontWeight: FontWeight.w700),
-                                  ),
-                                  subtitle: Text(
-                                    '${m.memberCode} · ${l10n.perMonth('${m.monthlyAmount}')}',
-                                  ),
+                                if (showSelf && index == 0) {
+                                  return _MemberPaymentTile(
+                                    member: self!,
+                                    subtitle:
+                                        '${l10n.you} · ${self.memberCode} · ${l10n.perMonth('${self.monthlyAmount}')}',
+                                    highlight: true,
+                                    title: l10n.myPayment,
+                                    onTap: () => Navigator.pop(context, self),
+                                  );
+                                }
+                                final m = others[index - (showSelf ? 1 : 0)];
+                                return _MemberPaymentTile(
+                                  member: m,
+                                  subtitle:
+                                      '${m.memberCode} · ${l10n.perMonth('${m.monthlyAmount}')}',
                                   onTap: () => Navigator.pop(context, m),
                                 );
                               },
@@ -376,6 +382,20 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
     if (selected == null || !context.mounted) return;
     context.push('/collect/${selected.id}');
+  }
+
+  Member? _selfMember(List<Member> members, AppUser? user) {
+    if (user == null) return null;
+    final memberId = user.memberId;
+    if (memberId != null && memberId.isNotEmpty) {
+      return members.where((m) => m.id == memberId).firstOrNull;
+    }
+    final digits = user.phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return null;
+    return members.where((m) {
+      final phoneDigits = m.phone.replaceAll(RegExp(r'\D'), '');
+      return phoneDigits == digits || m.phone == user.phone;
+    }).firstOrNull;
   }
 }
 
@@ -416,6 +436,53 @@ class _FilterPill extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MemberPaymentTile extends StatelessWidget {
+  const _MemberPaymentTile({
+    required this.member,
+    required this.subtitle,
+    required this.onTap,
+    this.title,
+    this.highlight = false,
+  });
+
+  final Member member;
+  final String subtitle;
+  final VoidCallback onTap;
+  final String? title;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: highlight
+          ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+          : EdgeInsets.zero,
+      tileColor: highlight ? AppColors.primaryLight : null,
+      shape: highlight
+          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))
+          : null,
+      leading: CircleAvatar(
+        backgroundColor: highlight ? AppColors.primary : AppColors.primaryLight,
+        child: Text(
+          member.name.trim().isEmpty
+              ? '?'
+              : member.name.trim().characters.first.toUpperCase(),
+          style: TextStyle(
+            color: highlight ? Colors.white : AppColors.primary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      title: Text(
+        title ?? member.name,
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+      subtitle: Text(subtitle),
+      onTap: onTap,
     );
   }
 }

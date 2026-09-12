@@ -244,6 +244,27 @@ class AppLocalizations {
   String get quickActions => _t('Quick Actions', 'দ্রুত কাজ');
   String get addMember => _t('Add Member', 'সদস্য যোগ');
   String get addPayment => _t('Add payment', 'পেমেন্ট যোগ করুন');
+  String get myPayment => _t('My payment', 'আমার পেমেন্ট');
+  String get you => _t('You', 'আপনি');
+  String get organizationWallets =>
+      _t('Organization wallets', 'সংগঠনের ওয়ালেট');
+  String get organizationWalletsHint => _t(
+        'These numbers appear as To when collecting a wallet payment.',
+        'ওয়ালেট পেমেন্ট গ্রহণের সময় এই নম্বরগুলো প্রাপক (To) হিসেবে দেখাবে।',
+      );
+  String get walletLabel => _t('Label', 'লেবেল');
+  String get walletNumber => _t('Wallet number', 'ওয়ালেট নম্বর');
+  String get addWallet => _t('Add wallet', 'ওয়ালেট যোগ করুন');
+  String get organizationWalletTo =>
+      _t('Organization wallet (To)', 'সংগঠনের ওয়ালেট (প্রাপক)');
+  String get customerWalletFrom =>
+      _t('Customer wallet (From)', 'গ্রাহকের ওয়ালেট (প্রেরক)');
+  String get selectOrganizationWallet =>
+      _t('Select organization wallet', 'সংগঠনের ওয়ালেট বেছে নিন');
+  String get noOrganizationWallets => _t(
+        'Add organization wallet numbers in Settings first.',
+        'আগে সেটিংসে সংগঠনের ওয়ালেট নম্বর যোগ করুন।',
+      );
   String get collectPayment => _t('Collect Payment', 'পেমেন্ট গ্রহণ');
   String get selectMemberForPayment =>
       _t('Select a member', 'একজন সদস্য বেছে নিন');
@@ -546,8 +567,8 @@ class AppLocalizations {
         'সদস্য তালিকা থেকে যিনি নগদ গ্রহণ করেছেন তাকে বেছে নিন।',
       );
   String get enterWalletAndTxn => _t(
-        'Enter wallet account number and transaction ID',
-        'ওয়ালেট অ্যাকাউন্ট নম্বর ও ট্রানজেকশন আইডি লিখুন',
+        'Select organization wallet (To), enter customer wallet (From) and transaction ID',
+        'সংগঠনের ওয়ালেট (প্রাপক) বেছে নিন, গ্রাহকের ওয়ালেট (প্রেরক) ও ট্রানজেকশন আইডি লিখুন',
       );
   String get selectCollectorFromList => _t(
         'Select a collector from the members list',

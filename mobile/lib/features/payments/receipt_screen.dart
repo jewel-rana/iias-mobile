@@ -113,8 +113,10 @@ class ReceiptScreen extends StatelessWidget {
                                 : l10n.collector,
                             payment.collectorName!,
                           ),
+                        if (payment.organizationWalletDisplay != null)
+                          _row(l10n.organizationWalletTo, payment.organizationWalletDisplay!),
                         if (payment.walletAccount?.isNotEmpty ?? false)
-                          _row(l10n.wallet, payment.walletAccount!),
+                          _row(l10n.customerWalletFrom, payment.walletAccount!),
                         if (payment.transactionId?.isNotEmpty ?? false)
                           _row(l10n.txnId, payment.transactionId!),
                         const Divider(height: 28),

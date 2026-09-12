@@ -74,6 +74,8 @@ abstract class AppRepository {
     required List<PaymentAllocation> allocations,
     String? collectorName,
     String? walletAccount,
+    String? organizationWalletLabel,
+    String? organizationWalletNumber,
     String? transactionId,
   });
   Future<List<PaymentRecord>> getPayments({
@@ -504,6 +506,8 @@ class MockAppRepository implements AppRepository {
     required List<PaymentAllocation> allocations,
     String? collectorName,
     String? walletAccount,
+    String? organizationWalletLabel,
+    String? organizationWalletNumber,
     String? transactionId,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
@@ -523,6 +527,8 @@ class MockAppRepository implements AppRepository {
       collectorName: collectorName ??
           (currentUser?.role == UserRole.member ? 'Self' : MockData.admin.name),
       walletAccount: walletAccount,
+      organizationWalletLabel: organizationWalletLabel,
+      organizationWalletNumber: organizationWalletNumber,
       transactionId: transactionId,
     );
     _payments.insert(0, record);
@@ -573,6 +579,8 @@ class MockAppRepository implements AppRepository {
       status: PaymentStatus.confirmed,
       collectorName: old.collectorName,
       walletAccount: old.walletAccount,
+      organizationWalletLabel: old.organizationWalletLabel,
+      organizationWalletNumber: old.organizationWalletNumber,
       transactionId: old.transactionId,
     );
     _payments[idx] = updated;
@@ -602,6 +610,8 @@ class MockAppRepository implements AppRepository {
       status: PaymentStatus.rejected,
       collectorName: old.collectorName,
       walletAccount: old.walletAccount,
+      organizationWalletLabel: old.organizationWalletLabel,
+      organizationWalletNumber: old.organizationWalletNumber,
       transactionId: old.transactionId,
       rejectionReason: reason,
     );

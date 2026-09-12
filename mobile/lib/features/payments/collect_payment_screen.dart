@@ -31,7 +31,8 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
   List<MonthlyDue> _dues = [];
   final Set<String> _selectedKeys = {};
   PaymentMethod _method = PaymentMethod.cashToCollector;
-  Member? _selectedCollector;
+  OrganizationWallet? _orgWallet;
+  List<OrganizationWallet> _orgWallets = [];
   final _walletAccountCtrl = TextEditingController();
   final _txnIdCtrl = TextEditingController();
   bool _loading = false;
@@ -70,6 +71,12 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     final member = await repo.getMember(memberId);
     final dues = await repo.getMemberDues(memberId);
     final members = await repo.getMembers();
+    List<OrganizationWallet> wallets = const [];
+    try {
+      wallets = (await repo.getOrganizationSettings()).wallets;
+    } catch (_) {
+      wallets = const [];
+    }
     if (!mounted) return;
 
     Member? defaultCollector;
@@ -87,6 +94,9 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
       _member = member;
       _dues = dues;
       _members = members.where((m) => m.id != memberId).toList();
+      _orgWallets = wallets;
+      _orgWallet = wallets.length == 1 ? wallets.first : _orgWallet;
+      _walletAccountCtrl.text = member?.phone ?? '';
       _selectedCollector = defaultCollector;
       _selectedKeys.clear();
       _busy = false;
@@ -264,10 +274,14 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     }
 
     if (_method == PaymentMethod.mobileWallet) {
-      if (_walletAccountCtrl.text.trim().isEmpty || _txnIdCtrl.text.trim().isEmpty) {
+      if (_orgWallet == null ||
+          _walletAccountCtrl.text.trim().isEmpty ||
+          _txnIdCtrl.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(context.l10n.enterWalletAndTxn),
+            content: Text(
+              _orgWallets.isEmpty ? context.l10n.noOrganizationWallets : context.l10n.enterWalletAndTxn,
+            ),
           ),
         );
         return;
@@ -324,6 +338,12 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                 : null,
             walletAccount: _method == PaymentMethod.mobileWallet
                 ? _walletAccountCtrl.text.trim()
+                : null,
+            organizationWalletLabel: _method == PaymentMethod.mobileWallet
+                ? _orgWallet?.label
+                : null,
+            organizationWalletNumber: _method == PaymentMethod.mobileWallet
+                ? _orgWallet?.number
                 : null,
             transactionId: _method == PaymentMethod.mobileWallet
                 ? _txnIdCtrl.text.trim()
@@ -423,11 +443,35 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                     style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 12),
+                  if (_orgWallets.isEmpty)
+                    Text(
+                      l10n.noOrganizationWallets,
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    )
+                  else
+                    DropdownButtonFormField<OrganizationWallet>(
+                      value: _orgWallets.contains(_orgWallet) ? _orgWallet : null,
+                      decoration: InputDecoration(
+                        labelText: l10n.organizationWalletTo,
+                        prefixIcon: const Icon(Icons.account_balance_outlined),
+                      ),
+                      hint: Text(l10n.selectOrganizationWallet),
+                      items: _orgWallets
+                          .map(
+                            (w) => DropdownMenuItem(
+                              value: w,
+                              child: Text(w.display),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => _orgWallet = v),
+                    ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _walletAccountCtrl,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      labelText: l10n.walletAccountNumber,
+                      labelText: l10n.customerWalletFrom,
                       hintText: '01XXXXXXXXX',
                       prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
                     ),

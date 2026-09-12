@@ -33,6 +33,7 @@ class _OrganizationSettingsScreenState
   bool _publicJoinEnabled = true;
   bool _loaded = false;
   bool _saving = false;
+  final _walletRows = <({TextEditingController label, TextEditingController number})>[];
 
   @override
   void dispose() {
@@ -42,6 +43,10 @@ class _OrganizationSettingsScreenState
     _address.dispose();
     _amount.dispose();
     _currency.dispose();
+    for (final row in _walletRows) {
+      row.label.dispose();
+      row.number.dispose();
+    }
     super.dispose();
   }
 
@@ -54,7 +59,43 @@ class _OrganizationSettingsScreenState
     _currency.text = s.currencySymbol;
     _referralEnabled = s.referralEnabled;
     _publicJoinEnabled = s.publicJoinEnabled;
+    for (final row in _walletRows) {
+      row.label.dispose();
+      row.number.dispose();
+    }
+    _walletRows
+      ..clear()
+      ..addAll(
+        s.wallets.map(
+          (w) => (
+            label: TextEditingController(text: w.label),
+            number: TextEditingController(text: w.number),
+          ),
+        ),
+      );
+    if (_walletRows.isEmpty) {
+      _walletRows.add((
+        label: TextEditingController(),
+        number: TextEditingController(),
+      ));
+    }
     _loaded = true;
+  }
+
+  void _addWallet() {
+    setState(() {
+      _walletRows.add((
+        label: TextEditingController(),
+        number: TextEditingController(),
+      ));
+    });
+  }
+
+  void _removeWallet(int index) {
+    final row = _walletRows.removeAt(index);
+    row.label.dispose();
+    row.number.dispose();
+    setState(() {});
   }
 
   Future<void> _save() async {
@@ -71,6 +112,15 @@ class _OrganizationSettingsScreenState
               currencySymbol: _currency.text.trim(),
               referralEnabled: _referralEnabled,
               publicJoinEnabled: _publicJoinEnabled,
+              wallets: _walletRows
+                  .map(
+                    (row) => OrganizationWallet(
+                      label: row.label.text.trim(),
+                      number: row.number.text.replaceAll(RegExp(r'\s+'), ''),
+                    ),
+                  )
+                  .where((w) => w.number.isNotEmpty)
+                  .toList(),
             ),
           );
       ref.invalidate(orgSettingsProvider);
@@ -195,6 +245,72 @@ class _OrganizationSettingsScreenState
                         ),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SectionCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.organizationWallets,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.organizationWalletsHint,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...List.generate(_walletRows.length, (index) {
+                        final row = _walletRows[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextFormField(
+                                  controller: row.label,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.walletLabel,
+                                    hintText: 'bKash',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 3,
+                                child: TextFormField(
+                                  controller: row.number,
+                                  keyboardType: TextInputType.phone,
+                                  decoration: InputDecoration(
+                                    labelText: l10n.walletNumber,
+                                    hintText: '01XXXXXXXXX',
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: l10n.delete,
+                                onPressed: () => _removeWallet(index),
+                                icon: const Icon(Icons.close_rounded),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      TextButton.icon(
+                        onPressed: _addWallet,
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.addWallet),
                       ),
                     ],
                   ),
