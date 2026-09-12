@@ -31,6 +31,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
   List<MonthlyDue> _dues = [];
   final Set<String> _selectedKeys = {};
   PaymentMethod _method = PaymentMethod.cashToCollector;
+  Member? _selectedCollector;
   OrganizationWallet? _orgWallet;
   List<OrganizationWallet> _orgWallets = [];
   final _walletAccountCtrl = TextEditingController();
