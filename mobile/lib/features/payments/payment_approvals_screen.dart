@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../dashboard/dashboard_screen.dart';
 
 final paymentApprovalFilterProvider =
@@ -103,7 +104,7 @@ class PaymentApprovalsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const IiasAppBar(title: 'Payment Approvals'),
+      appBar: IiasAppBar(title: context.l10n.paymentApprovals),
       body: Column(
         children: [
           SingleChildScrollView(

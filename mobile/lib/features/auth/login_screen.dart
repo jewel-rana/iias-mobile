@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/auth_background.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/language_toggle.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -40,7 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
       if (!ok) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Unable to login. Try again.')),
+          SnackBar(content: Text(context.l10n.loginUnable)),
         );
       }
     } catch (e) {
@@ -56,6 +57,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final fieldBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
       borderSide: const BorderSide(color: Color(0xFFD5DED8)),
@@ -78,23 +80,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Welcome Back',
-                          style: GoogleFonts.manrope(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primaryDark,
-                          ),
+                          l10n.welcomeBack,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primaryDark,
+                              ),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Login to your account',
-                          style: GoogleFonts.manrope(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
+                          l10n.loginSubtitle,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                              ),
                         ),
                       ),
                       const SizedBox(height: 22),
@@ -118,7 +120,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         controller: _password,
                         obscureText: _obscure,
                         decoration: InputDecoration(
-                          hintText: 'Password',
+                          hintText: l10n.password,
                           prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.primary),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -151,47 +153,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'Remember me',
-                            style: GoogleFonts.manrope(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primaryDark,
-                            ),
+                            l10n.rememberMe,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryDark,
+                                ),
                           ),
                           const Spacer(),
                           TextButton(
                             onPressed: () {},
                             child: Text(
-                              'Forgot password?',
-                              style: GoogleFonts.manrope(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryDark,
-                              ),
+                              l10n.forgotPassword,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primaryDark,
+                                  ),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 14),
-                      AppButton(label: 'Login', loading: _loading, onPressed: _submit),
+                      AppButton(label: l10n.login, loading: _loading, onPressed: _submit),
                       const SizedBox(height: 18),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Don't have an account? ",
-                            style: GoogleFonts.manrope(color: AppColors.textSecondary),
+                            l10n.dontHaveAccount,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
                           ),
                           GestureDetector(
                             onTap: () => context.push('/join'),
                             child: Text(
-                              'Join Now',
-                              style: GoogleFonts.manrope(
-                                color: AppColors.primaryDark,
-                                fontWeight: FontWeight.w800,
-                              ),
+                              l10n.joinNow,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.primaryDark,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                             ),
                           ),
                         ],
                       ),
+                      const LanguageBar(),
                       const SizedBox(height: 120),
                     ],
                   ),

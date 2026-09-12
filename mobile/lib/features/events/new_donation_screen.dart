@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 class NewDonationScreen extends ConsumerStatefulWidget {
   const NewDonationScreen({super.key, this.eventId});
@@ -79,7 +80,7 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const IiasAppBar(title: 'New Donation'),
+      appBar: IiasAppBar(title: context.l10n.newDonation),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

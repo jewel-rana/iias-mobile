@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/language_toggle.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
@@ -13,8 +15,10 @@ class MoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider);
 
+    final l10n = context.l10n;
+
     return Scaffold(
-      appBar: const IiasAppBar(title: 'More', automaticallyImplyLeading: false),
+      appBar: IiasAppBar(title: l10n.more, automaticallyImplyLeading: false),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -26,7 +30,7 @@ class MoreScreen extends ConsumerWidget {
                 child: Icon(Icons.person, color: AppColors.primary),
               ),
               title: Text(
-                user?.name ?? 'User',
+                user?.name ?? l10n.user,
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               subtitle: Text(
@@ -41,8 +45,8 @@ class MoreScreen extends ConsumerWidget {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.bar_chart_rounded),
-                  title: const Text('Reports'),
-                  subtitle: const Text('Monthly collection summary'),
+                  title: Text(l10n.reports),
+                  subtitle: Text(l10n.reportsSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/reports'),
                 ),
@@ -50,8 +54,8 @@ class MoreScreen extends ConsumerWidget {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.account_balance_wallet_outlined),
-                  title: const Text('Expenses'),
-                  subtitle: const Text('Salary, festival bonus & spending'),
+                  title: Text(l10n.expenses),
+                  subtitle: Text(l10n.expensesSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/expenses'),
                 ),
@@ -59,8 +63,8 @@ class MoreScreen extends ConsumerWidget {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.category_outlined),
-                  title: const Text('Expense Heads'),
-                  subtitle: const Text('Manage salary, bonus & other types'),
+                  title: Text(l10n.expenseHeads),
+                  subtitle: Text(l10n.expenseHeadsSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/expense-heads'),
                 ),
@@ -68,17 +72,26 @@ class MoreScreen extends ConsumerWidget {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.groups_2_outlined),
-                  title: const Text('Organizing Committee'),
-                  subtitle: const Text('Chairman, Secretary & other roles'),
+                  title: Text(l10n.committee),
+                  subtitle: Text(l10n.committeeSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/committee'),
                 ),
                 const Divider(),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.campaign_outlined),
+                  title: Text(l10n.meetings),
+                  subtitle: Text(l10n.meetingsSubtitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/meetings'),
+                ),
+                const Divider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.how_to_reg),
-                  title: const Text('Join Requests'),
-                  subtitle: const Text('Approve or reject applicants'),
+                  title: Text(l10n.joinRequests),
+                  subtitle: Text(l10n.joinRequestsSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/join-requests'),
                 ),
@@ -86,8 +99,8 @@ class MoreScreen extends ConsumerWidget {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.fact_check_outlined),
-                  title: const Text('Payment Approvals'),
-                  subtitle: const Text('Accept member-submitted payments'),
+                  title: Text(l10n.paymentApprovals),
+                  subtitle: Text(l10n.paymentApprovalsSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/payment-approvals'),
                 ),
@@ -95,8 +108,8 @@ class MoreScreen extends ConsumerWidget {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.settings_outlined),
-                  title: const Text('Organization Settings'),
-                  subtitle: const Text('Name, dues default & referrals'),
+                  title: Text(l10n.organizationSettings),
+                  subtitle: Text(l10n.organizationSettingsSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => context.push('/organization-settings'),
                 ),
@@ -104,8 +117,12 @@ class MoreScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
+          SectionCard(
+            child: const LanguageToggle(),
+          ),
+          const SizedBox(height: 12),
           AppButton(
-            label: 'Logout',
+            label: l10n.logout,
             outlined: true,
             onPressed: () async {
               await ref.read(authStateProvider.notifier).logout();

@@ -122,6 +122,24 @@ abstract class AppRepository {
   });
   Future<CommitteeMember> updateCommitteeMember(CommitteeMember member);
   Future<void> deleteCommitteeMember(String id);
+  Future<List<Meeting>> getMeetings({MeetingStatus? status});
+  Future<Meeting> getMeeting(String id);
+  Future<Meeting> createMeeting({
+    required String purpose,
+    required DateTime startsAt,
+    String? title,
+    String? location,
+  });
+  Future<Meeting> updateMeeting({
+    required String id,
+    String? title,
+    String? purpose,
+    DateTime? startsAt,
+    String? location,
+    MeetingStatus? status,
+    String? summary,
+    List<String>? presentMemberIds,
+  });
 }
 
 class MockAppRepository implements AppRepository {
@@ -802,6 +820,79 @@ class MockAppRepository implements AppRepository {
   @override
   Future<void> deleteCommitteeMember(String id) async {
     _committeeMembers.removeWhere((m) => m.id == id);
+  }
+
+  final _meetings = <Meeting>[];
+
+  @override
+  Future<List<Meeting>> getMeetings({MeetingStatus? status}) async {
+    await Future<void>.delayed(const Duration(milliseconds: 150));
+    final list = [..._meetings]..sort((a, b) => b.startsAt.compareTo(a.startsAt));
+    if (status == null) return list;
+    return list.where((m) => m.status == status).toList();
+  }
+
+  @override
+  Future<Meeting> getMeeting(String id) async {
+    return _meetings.firstWhere((m) => m.id == id);
+  }
+
+  @override
+  Future<Meeting> createMeeting({
+    required String purpose,
+    required DateTime startsAt,
+    String? title,
+    String? location,
+  }) async {
+    final meeting = Meeting(
+      id: _uuid.v4(),
+      title: (title ?? '').trim().isEmpty ? 'Organization Meeting' : title!.trim(),
+      purpose: purpose.trim(),
+      startsAt: startsAt,
+      location: location,
+      status: MeetingStatus.scheduled,
+      announcementEn: purpose,
+      announcementBn: purpose,
+    );
+    _meetings.insert(0, meeting);
+    return meeting;
+  }
+
+  @override
+  Future<Meeting> updateMeeting({
+    required String id,
+    String? title,
+    String? purpose,
+    DateTime? startsAt,
+    String? location,
+    MeetingStatus? status,
+    String? summary,
+    List<String>? presentMemberIds,
+  }) async {
+    final idx = _meetings.indexWhere((m) => m.id == id);
+    if (idx < 0) throw StateError('Meeting not found');
+    final current = _meetings[idx];
+    final members = presentMemberIds == null
+        ? current.presentMembers
+        : _members
+            .where((m) => presentMemberIds.contains(m.id))
+            .map((m) => MeetingAttendee(id: m.id, name: m.name, memberCode: m.memberCode))
+            .toList();
+    final updated = Meeting(
+      id: current.id,
+      title: title ?? current.title,
+      purpose: purpose ?? current.purpose,
+      startsAt: startsAt ?? current.startsAt,
+      location: location ?? current.location,
+      status: status ?? current.status,
+      summary: summary ?? current.summary,
+      announcementEn: current.announcementEn,
+      announcementBn: current.announcementBn,
+      presentMemberIds: presentMemberIds ?? current.presentMemberIds,
+      presentMembers: members,
+    );
+    _meetings[idx] = updated;
+    return updated;
   }
 }
 

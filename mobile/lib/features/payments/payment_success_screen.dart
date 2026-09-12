@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/receipt_share.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
+import '../../l10n/app_localizations.dart';
 import 'receipt_screen.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
@@ -37,7 +38,7 @@ class PaymentSuccessScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: IiasAppBar(
-        title: payment.isPending ? 'Payment Submitted' : 'Payment Recorded',
+        title: payment.isPending ? context.l10n.paymentSubmitted : context.l10n.paymentRecorded,
       ),
       body: SafeArea(
         top: false,

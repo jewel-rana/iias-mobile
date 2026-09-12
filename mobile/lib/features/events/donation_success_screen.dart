@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/receipt_share.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
+import '../../l10n/app_localizations.dart';
 import '../payments/receipt_screen.dart';
 
 class DonationSuccessScreen extends StatelessWidget {
@@ -16,7 +17,7 @@ class DonationSuccessScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const IiasAppBar(title: 'Donation Received'),
+      appBar: IiasAppBar(title: context.l10n.donationReceived),
       body: SafeArea(
         top: false,
         child: LayoutBuilder(

@@ -26,6 +26,8 @@ const _allowedRoutes = {
   '/notifications',
   '/payment-approvals',
   '/join-requests',
+  '/meetings',
+  '/open-meeting',
 };
 
 @pragma('vm:entry-point')
@@ -188,6 +190,8 @@ class PushService {
 
   String _sanitizeRoute(String? route) {
     if (route == null || route.isEmpty) return '/notifications';
-    return _allowedRoutes.contains(route) ? route : '/notifications';
+    if (_allowedRoutes.contains(route)) return route;
+    if (RegExp(r'^/meetings/[A-Za-z0-9-]+$').hasMatch(route)) return route;
+    return '/notifications';
   }
 }

@@ -7,6 +7,7 @@ import '../../core/navigation/back_fallback.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../dashboard/dashboard_screen.dart';
 import 'events_screen.dart';
 
@@ -89,7 +90,7 @@ class _AddCampaignScreenState extends ConsumerState<AddCampaignScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
-        title: 'Add Campaign',
+        title: context.l10n.addCampaign,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => popOrGo(context, '/events'),

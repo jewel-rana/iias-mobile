@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../members/members_screen.dart';
 import '../notifications/notifications_screen.dart';
 
@@ -34,11 +35,12 @@ class DashboardScreen extends ConsumerWidget {
     final user = ref.watch(authStateProvider);
     final statsAsync = ref.watch(dashboardProvider);
     final eventsAsync = ref.watch(activeEventsProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
-        title: 'Dashboard',
+        title: l10n.dashboard,
         automaticallyImplyLeading: false,
         actions: const [
           NotificationBell(),
@@ -53,7 +55,7 @@ class DashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
             children: [
               Text(
-                'Assalamu Alaikum, ${user?.name ?? 'User'}',
+                '${l10n.assalamuAlaikum}, ${user?.name ?? l10n.user}',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       height: 1.25,
@@ -82,7 +84,7 @@ class DashboardScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _StatMini(
-                        label: 'Members',
+                        label: l10n.members,
                         value: '${stats.totalMembers}',
                         icon: Icons.groups_rounded,
                         onTap: () => _openMembers(ref, context, null),
@@ -91,7 +93,7 @@ class DashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _StatMini(
-                        label: 'Paid',
+                        label: l10n.paid,
                         value: '${stats.paid}',
                         color: AppColors.paid,
                         icon: Icons.check_circle_outline,
@@ -102,7 +104,7 @@ class DashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _StatMini(
-                        label: 'Partial',
+                        label: l10n.partial,
                         value: '${stats.partial}',
                         color: AppColors.partial,
                         icon: Icons.timelapse_rounded,
@@ -116,7 +118,7 @@ class DashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _StatMini(
-                        label: 'Unpaid',
+                        label: l10n.unpaid,
                         value: '${stats.unpaid}',
                         color: AppColors.unpaid,
                         icon: Icons.error_outline_rounded,
@@ -132,7 +134,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 22),
               Text(
-                'Quick Actions',
+                l10n.quickActions,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
@@ -143,28 +145,28 @@ class DashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: _QuickAction(
                       icon: Icons.person_add_alt_1_rounded,
-                      label: 'Add Member',
+                      label: l10n.addMember,
                       onTap: () => context.push('/add-member'),
                     ),
                   ),
                   Expanded(
                     child: _QuickAction(
                       icon: Icons.payments_rounded,
-                      label: 'Collect Payment',
+                      label: l10n.collectPayment,
                       onTap: () => context.go('/collection'),
                     ),
                   ),
                   Expanded(
                     child: _QuickAction(
                       icon: Icons.account_balance_wallet_outlined,
-                      label: 'Add Expense',
+                      label: l10n.addExpense,
                       onTap: () => context.push('/add-expense'),
                     ),
                   ),
                   Expanded(
                     child: _QuickAction(
                       icon: Icons.warning_amber_rounded,
-                      label: 'View Unpaid',
+                      label: l10n.viewUnpaid,
                       onTap: () => _openMembers(
                         ref,
                         context,
@@ -178,7 +180,7 @@ class DashboardScreen extends ConsumerWidget {
               Row(
                 children: [
                   Text(
-                    'Active Campaigns',
+                    l10n.activeCampaigns,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -186,7 +188,7 @@ class DashboardScreen extends ConsumerWidget {
                   const Spacer(),
                   TextButton(
                     onPressed: () => context.go('/events'),
-                    child: const Text('See all'),
+                    child: Text(l10n.seeAll),
                   ),
                 ],
               ),
@@ -243,9 +245,9 @@ class _CollectionHeroCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'This Month Collection',
-            style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
+          Text(
+            context.l10n.thisMonthCollection,
+            style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 10),
           Text(
@@ -257,7 +259,7 @@ class _CollectionHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'of ৳ ${_fmt(stats.expected)}  ·  ${(stats.rate * 100).round()}%',
+            context.l10n.ofExpected(_fmt(stats.expected), (stats.rate * 100).round()),
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
           const SizedBox(height: 14),
@@ -308,9 +310,9 @@ class _FundsAvailableCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Total Funds Available',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.totalFundsAvailable,
+                    style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
@@ -326,7 +328,7 @@ class _FundsAvailableCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Spent ৳ ${_fmt(stats.totalExpenses)} of ৳ ${_fmt(stats.totalInflow)}',
+                    context.l10n.spentOf(_fmt(stats.totalExpenses), _fmt(stats.totalInflow)),
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,

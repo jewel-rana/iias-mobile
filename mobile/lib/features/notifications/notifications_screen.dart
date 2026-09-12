@@ -3,15 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/l10n/locale_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../members/members_screen.dart';
 import '../more/join_requests_screen.dart';
 
-enum NotificationKind { paymentApproval, joinRequest, unpaidMembers }
+enum NotificationKind { paymentApproval, joinRequest, unpaidMembers, meeting }
 
 class AppNotification {
   const AppNotification({
@@ -39,13 +41,15 @@ final notificationsProvider =
   final stats = await ref.watch(dashboardProvider.future);
   final payments = await repo.getPayments(status: PaymentStatus.pending);
   final joins = await repo.getJoinRequests(status: JoinRequestStatus.submitted);
+  final meetings = await repo.getMeetings(status: MeetingStatus.scheduled);
+  final l10n = AppLocalizations(ref.watch(localeProvider));
 
   final items = <AppNotification>[
     ...payments.map(
       (p) => AppNotification(
         id: 'pay-${p.id}',
         kind: NotificationKind.paymentApproval,
-        title: 'Payment pending approval',
+        title: l10n.paymentPendingApproval,
         subtitle: '${p.memberName} · ৳ ${_formatAmount(p.amount)}',
         icon: Icons.fact_check_outlined,
         color: AppColors.partial,
@@ -56,11 +60,22 @@ final notificationsProvider =
       (j) => AppNotification(
         id: 'join-${j.id}',
         kind: NotificationKind.joinRequest,
-        title: 'New join request',
+        title: l10n.newJoinRequest,
         subtitle: '${j.fullName} · ${j.phone}',
         icon: Icons.how_to_reg_outlined,
         color: AppColors.primary,
         at: j.submittedAt,
+      ),
+    ),
+    ...meetings.map(
+      (m) => AppNotification(
+        id: 'meet-${m.id}',
+        kind: NotificationKind.meeting,
+        title: l10n.meetingPrefix(m.title),
+        subtitle: m.purpose,
+        icon: Icons.campaign_outlined,
+        color: AppColors.primary,
+        at: m.startsAt,
       ),
     ),
   ];
@@ -77,8 +92,8 @@ final notificationsProvider =
       AppNotification(
         id: 'unpaid-$month',
         kind: NotificationKind.unpaidMembers,
-        title: '${stats.unpaid} members unpaid',
-        subtitle: '$month dues are still outstanding.',
+        title: l10n.membersUnpaid(stats.unpaid),
+        subtitle: l10n.duesOutstanding(month),
         icon: Icons.error_outline_rounded,
         color: AppColors.unpaid,
       ),
@@ -104,7 +119,7 @@ class NotificationBell extends ConsumerWidget {
     final count = async.valueOrNull?.length ?? 0;
 
     return IconButton(
-      tooltip: 'Notifications',
+      tooltip: context.l10n.notifications,
       onPressed: () => context.push('/notifications'),
       icon: Badge(
         isLabelVisible: count > 0,
@@ -134,6 +149,8 @@ class NotificationsScreen extends ConsumerWidget {
         ref.read(membersFilterProvider.notifier).state =
             MemberPaymentStatus.unpaid;
         context.go('/members');
+      case NotificationKind.meeting:
+        context.push('/meetings/${item.id.replaceFirst('meet-', '')}');
     }
   }
 
@@ -141,16 +158,17 @@ class NotificationsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(notificationsProvider);
     final timeFmt = DateFormat('dd MMM · hh:mm a');
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const IiasAppBar(title: 'Notifications'),
+      appBar: IiasAppBar(title: l10n.notifications),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => EmptyState(message: 'Unable to load notifications.\n$e'),
+        error: (e, _) => EmptyState(message: '${l10n.unableToLoadNotifications}\n$e'),
         data: (items) {
           if (items.isEmpty) {
-            return const EmptyState(message: 'No notifications right now');
+            return EmptyState(message: l10n.noNotifications);
           }
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(notificationsProvider),

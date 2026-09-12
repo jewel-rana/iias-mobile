@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/auth_background.dart';
+import '../../core/widgets/language_toggle.dart';
+import '../../l10n/app_localizations.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       body: AuthBackground(
         showArch: true,
@@ -26,26 +27,28 @@ class SplashScreen extends StatelessWidget {
                 const BrandMark(height: 220),
                 const Spacer(flex: 3),
                 Text(
-                  AppConstants.quote,
+                  l10n.quote,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primaryDark,
-                    height: 1.45,
-                  ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryDark,
+                        height: 1.45,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppConstants.quoteAuthor,
+                  l10n.quoteAuthor,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.primary.withValues(alpha: 0.85),
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary.withValues(alpha: 0.85),
+                      ),
                 ),
                 const Spacer(flex: 2),
+                const LanguageBar(),
+                const SizedBox(height: 14),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -56,13 +59,8 @@ class SplashScreen extends StatelessWidget {
                       minimumSize: const Size.fromHeight(54),
                       shape: const StadiumBorder(),
                       elevation: 0,
-                      textStyle: GoogleFonts.manrope(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        letterSpacing: 0.2,
-                      ),
                     ),
-                    child: const Text('Get Started'),
+                    child: Text(l10n.getStarted),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -70,20 +68,20 @@ class SplashScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Already have an account? ',
-                      style: GoogleFonts.manrope(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      l10n.alreadyHaveAccount,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     GestureDetector(
                       onTap: () => context.go('/login'),
                       child: Text(
-                        'Login',
-                        style: GoogleFonts.manrope(
-                          color: AppColors.primaryDark,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        l10n.login,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                     ),
                   ],

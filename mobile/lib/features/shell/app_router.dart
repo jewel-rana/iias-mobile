@@ -17,6 +17,9 @@ import '../expenses/add_expense_screen.dart';
 import '../expenses/expense_heads_screen.dart';
 import '../expenses/expenses_screen.dart';
 import '../join/join_screen.dart';
+import '../meetings/meeting_detail_screen.dart';
+import '../meetings/meetings_screen.dart';
+import '../meetings/open_meeting_screen.dart';
 import '../members/add_member_screen.dart';
 import '../members/member_detail_screen.dart';
 import '../members/members_screen.dart';
@@ -201,6 +204,22 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/committee',
         fallback: '/more',
         builder: (_, __) => const CommitteeScreen(),
+      ),
+      _overlay(
+        path: '/meetings',
+        fallback: '/more',
+        builder: (_, __) => const MeetingsScreen(),
+      ),
+      _overlay(
+        path: '/open-meeting',
+        fallback: '/meetings',
+        builder: (_, __) => const OpenMeetingScreen(),
+      ),
+      _overlay(
+        path: '/meetings/:id',
+        fallback: '/meetings',
+        builder: (_, state) =>
+            MeetingDetailScreen(meetingId: state.pathParameters['id']!),
       ),
       _overlay(
         path: '/monthly-members',

@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../dashboard/dashboard_screen.dart';
 
 final expensesKindFilterProvider = StateProvider<ExpenseHeadKind?>((ref) => null);
@@ -38,7 +39,7 @@ class ExpensesScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
-        title: 'Expenses',
+        title: context.l10n.expenses,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(

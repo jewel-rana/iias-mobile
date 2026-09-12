@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 class MemberHomeScreen extends ConsumerWidget {
   const MemberHomeScreen({super.key});
@@ -17,9 +18,9 @@ class MemberHomeScreen extends ConsumerWidget {
     final memberId = user?.memberId;
 
     if (memberId == null) {
-      return const Scaffold(
-        appBar: IiasAppBar(title: 'Home', automaticallyImplyLeading: false),
-        body: EmptyState(message: 'Member profile not found'),
+      return Scaffold(
+        appBar: IiasAppBar(title: context.l10n.home, automaticallyImplyLeading: false),
+        body: EmptyState(message: context.l10n.memberProfileNotFound),
       );
     }
 
@@ -30,24 +31,24 @@ class MemberHomeScreen extends ConsumerWidget {
       ]),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Scaffold(
-            appBar: IiasAppBar(title: 'Home', automaticallyImplyLeading: false),
-            body: Center(child: CircularProgressIndicator()),
+          return Scaffold(
+            appBar: IiasAppBar(title: context.l10n.home, automaticallyImplyLeading: false),
+            body: const Center(child: CircularProgressIndicator()),
           );
         }
         final member = snapshot.data![0] as Member?;
         final allPayments = snapshot.data![1] as List<PaymentRecord>;
         if (member == null) {
-          return const Scaffold(
-            appBar: IiasAppBar(title: 'Home', automaticallyImplyLeading: false),
-            body: EmptyState(message: 'Member profile not found'),
+          return Scaffold(
+            appBar: IiasAppBar(title: context.l10n.home, automaticallyImplyLeading: false),
+            body: EmptyState(message: context.l10n.memberProfileNotFound),
           );
         }
         final payments = allPayments.where((p) => p.memberId == member.id).toList();
 
         return Scaffold(
           appBar: IiasAppBar(
-            title: 'Home',
+            title: context.l10n.home,
             automaticallyImplyLeading: false,
             actions: [
               IconButton(
@@ -63,7 +64,7 @@ class MemberHomeScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             children: [
                 Text(
-                  'Assalamu Alaikum',
+                  context.l10n.assalamuAlaikum,
                   style: const TextStyle(color: AppColors.textSecondary),
                 ),
                 Text(
@@ -177,6 +178,12 @@ class MemberHomeScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
+                const SizedBox(height: 12),
+                AppButton(
+                  label: context.l10n.meetings,
+                  outlined: true,
+                  onPressed: () => context.push('/meetings'),
+                ),
                 const SizedBox(height: 12),
                 AppButton(
                   label: 'View Fundraising Events',

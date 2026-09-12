@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 final allExpenseHeadsProvider = FutureProvider((ref) {
   return ref.watch(repositoryProvider).getExpenseHeads(activeOnly: false);
@@ -19,7 +20,7 @@ class ExpenseHeadsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const IiasAppBar(title: 'Expense Heads'),
+      appBar: IiasAppBar(title: context.l10n.expenseHeads),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openEditor(context, ref),
         icon: const Icon(Icons.add),

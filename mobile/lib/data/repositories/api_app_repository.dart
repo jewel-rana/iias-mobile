@@ -791,6 +791,61 @@ class ApiAppRepository implements AppRepository {
     await _dio.delete('/committee-members/$id');
   }
 
+  @override
+  Future<List<Meeting>> getMeetings({MeetingStatus? status}) async {
+    final res = await _dio.get('/meetings', queryParameters: {
+      if (status != null) 'status': status.name,
+    });
+    final list = (res.data['data'] as List).cast<Map<String, dynamic>>();
+    return list.map(_mapMeeting).toList();
+  }
+
+  @override
+  Future<Meeting> getMeeting(String id) async {
+    final res = await _dio.get('/meetings/$id');
+    return _mapMeeting(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Meeting> createMeeting({
+    required String purpose,
+    required DateTime startsAt,
+    String? title,
+    String? location,
+  }) async {
+    final res = await _dio.post('/meetings', data: {
+      'purpose': purpose,
+      'starts_at': startsAt.toUtc().toIso8601String(),
+      if (title != null && title.isNotEmpty) 'title': title,
+      if (location != null) 'location': location,
+    });
+    return _mapMeeting(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Meeting> updateMeeting({
+    required String id,
+    String? title,
+    String? purpose,
+    DateTime? startsAt,
+    String? location,
+    MeetingStatus? status,
+    String? summary,
+    List<String>? presentMemberIds,
+  }) async {
+    final res = await _dio.put('/meetings/$id', data: {
+      if (title != null) 'title': title,
+      if (purpose != null) 'purpose': purpose,
+      if (startsAt != null) 'starts_at': startsAt.toUtc().toIso8601String(),
+      if (location != null) 'location': location,
+      if (status != null) 'status': status.name,
+      if (summary != null) 'summary': summary,
+      if (presentMemberIds != null)
+        'present_member_ids': presentMemberIds.map(int.parse).toList(),
+    });
+    return _mapMeeting(res.data as Map<String, dynamic>);
+  }
+
   CommitteeRole _mapCommitteeRole(Map<String, dynamic> json) {
     return CommitteeRole(
       id: json['id'].toString(),
@@ -908,6 +963,40 @@ class ApiAppRepository implements AppRepository {
       currencySymbol: (json['currency_symbol'] as String?) ?? '৳',
       referralEnabled: json['referral_enabled'] == true,
       publicJoinEnabled: json['public_join_enabled'] != false,
+    );
+  }
+
+  Meeting _mapMeeting(Map<String, dynamic> json) {
+    final status = switch (json['status'] as String?) {
+      'completed' => MeetingStatus.completed,
+      'cancelled' => MeetingStatus.cancelled,
+      _ => MeetingStatus.scheduled,
+    };
+    final attendees = ((json['present_members'] as List?) ?? [])
+        .cast<Map<String, dynamic>>()
+        .map(
+          (a) => MeetingAttendee(
+            id: a['id'].toString(),
+            name: (a['name'] as String?) ?? '',
+            memberCode: a['member_code'] as String?,
+          ),
+        )
+        .toList();
+    return Meeting(
+      id: json['id'].toString(),
+      title: (json['title'] as String?) ?? 'Organization Meeting',
+      purpose: json['purpose'] as String,
+      startsAt: DateTime.tryParse((json['starts_at'] as String?) ?? '') ??
+          DateTime.now(),
+      location: json['location'] as String?,
+      status: status,
+      summary: json['summary'] as String?,
+      announcementEn: (json['announcement_en'] as String?) ?? '',
+      announcementBn: (json['announcement_bn'] as String?) ?? '',
+      presentMemberIds: ((json['present_member_ids'] as List?) ?? [])
+          .map((id) => id.toString())
+          .toList(),
+      presentMembers: attendees,
     );
   }
 }

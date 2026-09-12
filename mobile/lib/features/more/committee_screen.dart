@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 final committeeMembersProvider = FutureProvider((ref) {
   return ref.watch(repositoryProvider).getCommitteeMembers(activeOnly: false);
@@ -45,12 +46,12 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
-        title: 'Organizing Committee',
+        title: context.l10n.committee,
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [
-            Tab(text: 'Members'),
-            Tab(text: 'Roles'),
+          tabs: [
+            Tab(text: context.l10n.members),
+            Tab(text: context.l10n.roles),
           ],
         ),
       ),

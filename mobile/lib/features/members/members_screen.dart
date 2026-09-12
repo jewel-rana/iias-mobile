@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 final membersFilterProvider = StateProvider<MemberPaymentStatus?>((ref) => null);
 
@@ -57,15 +58,16 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   Widget build(BuildContext context) {
     final membersAsync = ref.watch(membersProvider);
     final filter = ref.watch(membersFilterProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
-        title: 'Members',
+        title: l10n.members,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            tooltip: 'Add Member',
+            tooltip: l10n.addMember,
             onPressed: () => context.push('/add-member'),
             icon: const Icon(Icons.person_add_alt_1_rounded),
           ),
@@ -76,7 +78,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Add Member'),
+        label: Text(l10n.addMember),
       ),
       body: Column(
         children: [
@@ -87,7 +89,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
               textInputAction: TextInputAction.search,
               onChanged: (value) => setState(() => _query = value),
               decoration: InputDecoration(
-                hintText: 'Search by name, ID or phone',
+                hintText: l10n.searchMembers,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _query.isEmpty
                     ? null
@@ -120,24 +122,24 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
             child: Row(
               children: [
                 _FilterPill(
-                  label: 'All',
+                  label: l10n.all,
                   selected: filter == null,
                   onTap: () => ref.read(membersFilterProvider.notifier).state = null,
                 ),
                 _FilterPill(
-                  label: 'Paid',
+                  label: l10n.paid,
                   selected: filter == MemberPaymentStatus.paid,
                   onTap: () => ref.read(membersFilterProvider.notifier).state =
                       MemberPaymentStatus.paid,
                 ),
                 _FilterPill(
-                  label: 'Partial',
+                  label: l10n.partial,
                   selected: filter == MemberPaymentStatus.partial,
                   onTap: () => ref.read(membersFilterProvider.notifier).state =
                       MemberPaymentStatus.partial,
                 ),
                 _FilterPill(
-                  label: 'Unpaid',
+                  label: l10n.unpaid,
                   selected: filter == MemberPaymentStatus.unpaid,
                   onTap: () => ref.read(membersFilterProvider.notifier).state =
                       MemberPaymentStatus.unpaid,

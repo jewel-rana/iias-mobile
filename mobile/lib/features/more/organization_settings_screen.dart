@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 final orgSettingsProvider = FutureProvider((ref) {
   return ref.watch(repositoryProvider).getOrganizationSettings();
@@ -94,7 +95,7 @@ class _OrganizationSettingsScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const IiasAppBar(title: 'Organization Settings'),
+      appBar: IiasAppBar(title: context.l10n.organizationSettings),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),

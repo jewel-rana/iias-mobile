@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key});
@@ -56,7 +57,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const IiasAppBar(title: 'Join Organization'),
+      appBar: IiasAppBar(title: context.l10n.joinOrganization),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: _submitted

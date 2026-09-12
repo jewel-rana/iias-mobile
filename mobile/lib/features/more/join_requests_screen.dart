@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../members/members_screen.dart';
 
@@ -27,7 +28,7 @@ class JoinRequestsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const IiasAppBar(title: 'Join Requests'),
+      appBar: IiasAppBar(title: context.l10n.joinRequests),
       body: Column(
         children: [
           SingleChildScrollView(

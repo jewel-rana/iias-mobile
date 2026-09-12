@@ -11,6 +11,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
 import '../../data/repositories/payment_allocator.dart';
+import '../../l10n/app_localizations.dart';
 import '../dashboard/dashboard_screen.dart';
 import 'members_screen.dart';
 
@@ -142,7 +143,7 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
-        title: 'Add Member',
+        title: context.l10n.addMember,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => popOrGo(context, '/members'),

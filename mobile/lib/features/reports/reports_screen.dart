@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 final reportProvider = FutureProvider((ref) {
   return ref.watch(repositoryProvider).getReport();
@@ -18,7 +19,7 @@ class ReportsScreen extends ConsumerWidget {
     final reportAsync = ref.watch(reportProvider);
 
     return Scaffold(
-      appBar: const IiasAppBar(title: 'Reports'),
+      appBar: IiasAppBar(title: context.l10n.reports),
       body: reportAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(message: '$e'),

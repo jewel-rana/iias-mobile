@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
+import '../../l10n/app_localizations.dart';
 import '../members/members_screen.dart';
 
 class CollectionScreen extends ConsumerStatefulWidget {
@@ -28,11 +29,12 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
   Widget build(BuildContext context) {
     final membersAsync = ref.watch(membersProvider);
     final filter = ref.watch(membersFilterProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const IiasAppBar(
-        title: 'Collection',
+      appBar: IiasAppBar(
+        title: l10n.collection,
         automaticallyImplyLeading: false,
       ),
       body: Column(
@@ -44,7 +46,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               textInputAction: TextInputAction.search,
               onChanged: (value) => setState(() => _query = value),
               decoration: InputDecoration(
-                hintText: 'Search by name, ID or phone',
+                hintText: l10n.searchMembers,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _query.isEmpty
                     ? null
@@ -77,24 +79,24 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
             child: Row(
               children: [
                 _FilterPill(
-                  label: 'All',
+                  label: l10n.all,
                   selected: filter == null,
                   onTap: () => ref.read(membersFilterProvider.notifier).state = null,
                 ),
                 _FilterPill(
-                  label: 'Paid',
+                  label: l10n.paid,
                   selected: filter == MemberPaymentStatus.paid,
                   onTap: () => ref.read(membersFilterProvider.notifier).state =
                       MemberPaymentStatus.paid,
                 ),
                 _FilterPill(
-                  label: 'Partial',
+                  label: l10n.partial,
                   selected: filter == MemberPaymentStatus.partial,
                   onTap: () => ref.read(membersFilterProvider.notifier).state =
                       MemberPaymentStatus.partial,
                 ),
                 _FilterPill(
-                  label: 'Unpaid',
+                  label: l10n.unpaid,
                   selected: filter == MemberPaymentStatus.unpaid,
                   onTap: () => ref.read(membersFilterProvider.notifier).state =
                       MemberPaymentStatus.unpaid,

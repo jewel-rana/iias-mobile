@@ -8,6 +8,7 @@ import '../../core/utils/receipt_share.dart';
 import '../../core/widgets/auth_background.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
+import '../../l10n/app_localizations.dart';
 
 class ReceiptScreen extends StatelessWidget {
   const ReceiptScreen.payment({super.key, required PaymentRecord payment})
@@ -50,7 +51,7 @@ class ReceiptScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const IiasAppBar(title: 'Receipt'),
+      appBar: IiasAppBar(title: context.l10n.receipt),
       body: Column(
         children: [
           Expanded(

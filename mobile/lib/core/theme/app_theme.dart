@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
+import 'app_fonts.dart';
 
 class AppTheme {
-  static ThemeData get light {
+  static ThemeData light([Locale locale = const Locale('en')]) {
+    final bangla = locale.languageCode == 'bn';
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
@@ -15,10 +17,22 @@ class AppTheme {
       ),
     );
 
-    final textTheme = GoogleFonts.manropeTextTheme(base.textTheme).apply(
-      bodyColor: AppColors.textPrimary,
-      displayColor: AppColors.textPrimary,
+    final manrope = GoogleFonts.manropeTextTheme(base.textTheme);
+    final textTheme = _withFallback(
+      (bangla ? manrope.apply(fontFamily: AppFonts.kalpurush) : manrope).apply(
+        bodyColor: AppColors.textPrimary,
+        displayColor: AppColors.textPrimary,
+      ),
+      bangla ? const ['Manrope'] : const [AppFonts.kalpurush],
     );
+
+    final titleStyle = bangla
+        ? AppFonts.bangla(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)
+        : GoogleFonts.manrope(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          );
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.background,
@@ -28,11 +42,7 @@ class AppTheme {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.manrope(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
+        titleTextStyle: titleStyle,
       ),
       cardTheme: CardThemeData(
         color: AppColors.surface,
@@ -66,7 +76,9 @@ class AppTheme {
           minimumSize: const Size.fromHeight(52),
           elevation: 0,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.manrope(fontWeight: FontWeight.w700, fontSize: 16),
+          textStyle: bangla
+              ? AppFonts.bangla(fontSize: 16, fontWeight: FontWeight.w700)
+              : GoogleFonts.manrope(fontWeight: FontWeight.w700, fontSize: 16),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -75,6 +87,7 @@ class AppTheme {
           minimumSize: const Size.fromHeight(48),
           side: const BorderSide(color: AppColors.primary),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle: bangla ? AppFonts.bangla(fontSize: 16, fontWeight: FontWeight.w700) : null,
         ),
       ),
       checkboxTheme: CheckboxThemeData(
@@ -90,6 +103,28 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
+    );
+  }
+
+  static TextTheme _withFallback(TextTheme theme, List<String> fallback) {
+    TextStyle? wrap(TextStyle? style) =>
+        style?.copyWith(fontFamilyFallback: fallback);
+    return theme.copyWith(
+      displayLarge: wrap(theme.displayLarge),
+      displayMedium: wrap(theme.displayMedium),
+      displaySmall: wrap(theme.displaySmall),
+      headlineLarge: wrap(theme.headlineLarge),
+      headlineMedium: wrap(theme.headlineMedium),
+      headlineSmall: wrap(theme.headlineSmall),
+      titleLarge: wrap(theme.titleLarge),
+      titleMedium: wrap(theme.titleMedium),
+      titleSmall: wrap(theme.titleSmall),
+      bodyLarge: wrap(theme.bodyLarge),
+      bodyMedium: wrap(theme.bodyMedium),
+      bodySmall: wrap(theme.bodySmall),
+      labelLarge: wrap(theme.labelLarge),
+      labelMedium: wrap(theme.labelMedium),
+      labelSmall: wrap(theme.labelSmall),
     );
   }
 }

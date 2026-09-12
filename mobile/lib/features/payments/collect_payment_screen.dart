@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 class CollectPaymentScreen extends ConsumerStatefulWidget {
   const CollectPaymentScreen({super.key, required this.memberId});
@@ -322,9 +323,9 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     if (_busy || _member == null) {
-      return const Scaffold(
-        appBar: IiasAppBar(title: 'Collect Payment'),
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        appBar: IiasAppBar(title: context.l10n.collectPayment),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -337,7 +338,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
-        title: isSelfSubmit ? 'Submit Payment' : 'Collect Payment',
+        title: isSelfSubmit ? context.l10n.submitPayment : context.l10n.collectPayment,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 final eventsTabProvider = StateProvider<int>((ref) => 0);
 
@@ -20,14 +21,15 @@ class EventsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tab = ref.watch(eventsTabProvider);
     final eventsAsync = ref.watch(eventsProvider);
+    final l10n = context.l10n;
 
     return Scaffold(
       appBar: IiasAppBar(
-        title: 'Funds',
+        title: l10n.funds,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            tooltip: 'Record donation',
+            tooltip: l10n.recordDonation,
             onPressed: () => context.push('/new-donation'),
             icon: const Icon(Icons.volunteer_activism_outlined),
           ),
@@ -38,7 +40,7 @@ class EventsScreen extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Add Campaign'),
+        label: Text(l10n.addCampaign),
       ),
       body: Column(
         children: [
@@ -48,7 +50,7 @@ class EventsScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: ChoiceChip(
-                    label: const Center(child: Text('Active')),
+                    label: Center(child: Text(l10n.active)),
                     selected: tab == 0,
                     onSelected: (_) => ref.read(eventsTabProvider.notifier).state = 0,
                   ),
@@ -56,7 +58,7 @@ class EventsScreen extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: ChoiceChip(
-                    label: const Center(child: Text('Past')),
+                    label: Center(child: Text(l10n.past)),
                     selected: tab == 1,
                     onSelected: (_) => ref.read(eventsTabProvider.notifier).state = 1,
                   ),
@@ -75,7 +77,7 @@ class EventsScreen extends ConsumerWidget {
                   return e.status != EventStatus.active;
                 }).toList();
                 if (filtered.isEmpty) {
-                  return const EmptyState(message: 'No fundraising events');
+                  return EmptyState(message: l10n.noFundraisingEvents);
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),

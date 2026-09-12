@@ -444,6 +444,50 @@ class CommitteeMember {
   final int sortOrder;
 }
 
+enum MeetingStatus { scheduled, completed, cancelled }
+
+class MeetingAttendee {
+  const MeetingAttendee({
+    required this.id,
+    required this.name,
+    this.memberCode,
+  });
+
+  final String id;
+  final String name;
+  final String? memberCode;
+}
+
+class Meeting {
+  const Meeting({
+    required this.id,
+    required this.title,
+    required this.purpose,
+    required this.startsAt,
+    required this.status,
+    required this.announcementEn,
+    required this.announcementBn,
+    this.location,
+    this.summary,
+    this.presentMemberIds = const [],
+    this.presentMembers = const [],
+  });
+
+  final String id;
+  final String title;
+  final String purpose;
+  final DateTime startsAt;
+  final MeetingStatus status;
+  final String? location;
+  final String? summary;
+  final String announcementEn;
+  final String announcementBn;
+  final List<String> presentMemberIds;
+  final List<MeetingAttendee> presentMembers;
+
+  bool get isScheduled => status == MeetingStatus.scheduled;
+}
+
 class ReportSummary {
   const ReportSummary({
     required this.monthLabel,

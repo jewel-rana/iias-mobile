@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 final memberDetailProvider =
     FutureProvider.autoDispose.family<({Member? member, List<MonthlyDue> dues}), String>(
@@ -26,14 +27,15 @@ class MemberDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(memberDetailProvider(memberId));
+    final l10n = context.l10n;
 
     return async.when(
-      loading: () => const Scaffold(
-        appBar: IiasAppBar(title: 'Member Details'),
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => Scaffold(
+        appBar: IiasAppBar(title: l10n.memberDetails),
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
-        appBar: const IiasAppBar(title: 'Member Details'),
+        appBar: IiasAppBar(title: l10n.memberDetails),
         body: EmptyState(message: 'Unable to load member.\n$e'),
       ),
       data: (data) {
@@ -41,7 +43,7 @@ class MemberDetailScreen extends ConsumerWidget {
         final dues = data.dues;
         if (member == null) {
           return Scaffold(
-            appBar: const IiasAppBar(title: 'Member Details'),
+            appBar: IiasAppBar(title: l10n.memberDetails),
             body: const EmptyState(message: 'Member not found'),
           );
         }
@@ -52,12 +54,12 @@ class MemberDetailScreen extends ConsumerWidget {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: const IiasAppBar(title: 'Member Details'),
+          appBar: IiasAppBar(title: l10n.memberDetails),
           bottomNavigationBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: AppButton(
-                label: 'Collect Payment',
+                label: l10n.collectPayment,
                 onPressed: () => context.push('/collect/${member.id}'),
               ),
             ),
