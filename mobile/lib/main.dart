@@ -18,13 +18,14 @@ Future<void> main() async {
   await initializeDateFormatting('bn');
   await initializeDateFormatting('en');
   await PushService.instance.initialize();
-  final savedLocale = await loadSavedLocale();
+  final localeChoice = await loadLocaleChoice();
   runApp(
     ProviderScope(
       overrides: [
         localeProvider.overrideWith(
-          (ref) => LocaleController(initial: savedLocale),
+          (ref) => LocaleController(initial: localeChoice.locale),
         ),
+        localeChosenProvider.overrideWith((ref) => localeChoice.chosen),
       ],
       child: const UmmahConnectApp(),
     ),

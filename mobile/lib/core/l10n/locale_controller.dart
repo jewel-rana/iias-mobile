@@ -6,9 +6,18 @@ import '../../l10n/app_localizations.dart';
 
 const _localeStorageKey = 'app_locale';
 
+class LocaleChoice {
+  const LocaleChoice({required this.locale, required this.chosen});
+
+  final Locale locale;
+  final bool chosen;
+}
+
 final localeProvider = StateNotifierProvider<LocaleController, Locale>((ref) {
   return LocaleController();
 });
+
+final localeChosenProvider = StateProvider<bool>((ref) => false);
 
 class LocaleController extends StateNotifier<Locale> {
   LocaleController({
@@ -19,13 +28,13 @@ class LocaleController extends StateNotifier<Locale> {
 
   final FlutterSecureStorage _storage;
 
+  void preview(Locale locale) {
+    state = locale;
+  }
+
   Future<void> restore() async {
-    final code = await _storage.read(key: _localeStorageKey);
-    if (code == 'bn') {
-      state = const Locale('bn');
-    } else {
-      state = AppLocalizations.defaultLocale;
-    }
+    final choice = await loadLocaleChoice();
+    state = choice.locale;
   }
 
   Future<void> setLocale(Locale locale) async {
@@ -34,8 +43,21 @@ class LocaleController extends StateNotifier<Locale> {
   }
 }
 
-Future<Locale> loadSavedLocale() async {
+Future<LocaleChoice> loadLocaleChoice() async {
   const storage = FlutterSecureStorage();
   final code = await storage.read(key: _localeStorageKey);
-  return code == 'bn' ? const Locale('bn') : AppLocalizations.defaultLocale;
+  if (code == 'bn') {
+    return const LocaleChoice(locale: Locale('bn'), chosen: true);
+  }
+  if (code == 'en') {
+    return const LocaleChoice(locale: Locale('en'), chosen: true);
+  }
+  return const LocaleChoice(
+    locale: AppLocalizations.defaultLocale,
+    chosen: false,
+  );
+}
+
+Future<Locale> loadSavedLocale() async {
+  return (await loadLocaleChoice()).locale;
 }

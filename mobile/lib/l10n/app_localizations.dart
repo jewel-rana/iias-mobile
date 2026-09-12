@@ -22,6 +22,13 @@ class AppLocalizations {
   String get language => _t('Language', 'ভাষা');
   String get english => 'English';
   String get bangla => 'বাংলা';
+  String get chooseLanguage => _t('Choose your language', 'ভাষা বেছে নিন');
+  String get chooseLanguageHint => _t(
+        'English is selected by default. You can change this later from More.',
+        'ইংরেজি ডিফল্ট হিসেবে নির্বাচিত। পরে আরও মেনু থেকে পরিবর্তন করতে পারবেন।',
+      );
+  String get continueLabel => _t('Continue', 'চালিয়ে যান');
+  String get defaultLanguage => _t('Default', 'ডিফল্ট');
 
   String get getStarted => _t('Get Started', 'শুরু করুন');
   String get login => _t('Login', 'লগইন');

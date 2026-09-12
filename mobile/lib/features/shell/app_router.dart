@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/l10n/locale_controller.dart';
 import '../../core/navigation/app_navigator.dart';
 import '../../core/navigation/back_fallback.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../auth/language_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/splash_screen.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -58,6 +60,11 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
+      final localeChosen = ref.read(localeChosenProvider);
+      final choosingLanguage = state.matchedLocation == '/choose-language';
+      if (!localeChosen && !choosingLanguage) return '/choose-language';
+      if (localeChosen && choosingLanguage) return '/splash';
+
       final auth = ref.read(authStateProvider);
       final loggingIn = state.matchedLocation == '/login' ||
           state.matchedLocation == '/splash' ||
@@ -70,6 +77,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(path: '/choose-language', builder: (_, __) => const LanguageScreen()),
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       _overlay(
@@ -237,6 +245,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(this.ref) {
     ref.listen(authStateProvider, (_, __) => notifyListeners());
+    ref.listen(localeChosenProvider, (_, __) => notifyListeners());
   }
 
   final Ref ref;
