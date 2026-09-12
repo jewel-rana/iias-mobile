@@ -112,8 +112,16 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: l10n.emailOptional,
+                        labelText: l10n.email,
                       ),
+                      validator: (v) {
+                        final value = v?.trim() ?? '';
+                        if (value.isEmpty) return l10n.requiredField;
+                        if (!value.contains('@') || !value.contains('.')) {
+                          return l10n.enterValidEmail;
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 12),
                     TextFormField(

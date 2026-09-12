@@ -47,8 +47,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       final message = e.toString().replaceFirst(RegExp(r'^Exception: '), '');
+      final passwordNotSet = message.toLowerCase().contains('password is not set');
+      final l10n = context.l10n;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(
+          content: Text(passwordNotSet ? l10n.memberPasswordNotSet : message),
+          action: passwordNotSet
+              ? SnackBarAction(
+                  label: l10n.forgotPasswordTitle,
+                  onPressed: () {
+                    final phone = Uri.encodeQueryComponent(_phone.text.trim());
+                    context.push('/forgot-password?phone=$phone');
+                  },
+                )
+              : null,
+        ),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -165,7 +178,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                           const Spacer(),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              final phone = Uri.encodeQueryComponent(_phone.text.trim());
+                              context.push('/forgot-password?phone=$phone');
+                            },
                             child: Text(
                               l10n.forgotPassword,
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -223,13 +239,8 @@ class _LoginTopBar extends StatelessWidget {
       bottom: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-        child: Center(
-          child: Image.asset(
-            BrandMark.assetPath,
-            height: 120,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
-          ),
+        child: const Center(
+          child: BrandMark(height: 120),
         ),
       ),
     );

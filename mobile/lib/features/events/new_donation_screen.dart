@@ -8,9 +8,10 @@ import '../../data/repositories/app_repository.dart';
 import '../../l10n/app_localizations.dart';
 
 class NewDonationScreen extends ConsumerStatefulWidget {
-  const NewDonationScreen({super.key, this.eventId});
+  const NewDonationScreen({super.key, this.eventId, this.memberId});
 
   final String? eventId;
+  final String? memberId;
 
   @override
   ConsumerState<NewDonationScreen> createState() => _NewDonationScreenState();
@@ -39,10 +40,25 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
     final repo = ref.read(repositoryProvider);
     final events = await repo.getEvents(activeOnly: true);
     final members = await repo.getMembers();
+    Member? prefill;
+    final memberId = widget.memberId;
+    if (memberId != null && memberId.isNotEmpty) {
+      prefill = members.where((m) => m.id == memberId).firstOrNull;
+      if (prefill == null) {
+        try {
+          prefill = await repo.getMember(memberId);
+        } catch (_) {}
+      }
+    }
     setState(() {
       _events = events;
       _members = members;
       _eventId ??= events.isNotEmpty ? events.first.id : null;
+      if (prefill != null) {
+        _donorType = DonorType.member;
+        _name.text = prefill.name;
+        _phone.text = prefill.phone;
+      }
     });
   }
 
@@ -71,6 +87,10 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
           amount: amount,
           method: _method,
           referredByMemberId: _donorType == DonorType.nonMember ? _referrerId : null,
+          memberId: _donorType == DonorType.member
+              ? (widget.memberId ??
+                  _members.where((m) => m.phone == _phone.text.trim()).firstOrNull?.id)
+              : null,
         );
     if (!mounted) return;
     setState(() => _loading = false);

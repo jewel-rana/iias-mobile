@@ -39,7 +39,10 @@ class IiasAppBar extends StatelessWidget implements PreferredSizeWidget {
             height: 36,
             width: 36,
             fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
+            filterQuality: FilterQuality.medium,
+            cacheHeight: ((MediaQuery.maybeOf(context)?.devicePixelRatio ?? 3) * 36)
+                .round()
+                .clamp(36, 128),
           ),
           const SizedBox(width: 10),
           Expanded(

@@ -7,6 +7,7 @@ import '../../core/navigation/app_navigator.dart';
 import '../../core/navigation/back_fallback.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../auth/forgot_password_screen.dart';
 import '../auth/language_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/splash_screen.dart';
@@ -24,15 +25,19 @@ import '../meetings/meetings_screen.dart';
 import '../meetings/open_meeting_screen.dart';
 import '../members/add_member_screen.dart';
 import '../members/member_detail_screen.dart';
+import '../members/member_donations_screen.dart';
+import '../members/member_payments_screen.dart';
 import '../members/members_screen.dart';
 import '../more/committee_screen.dart';
 import '../more/join_requests_screen.dart';
 import '../more/more_screen.dart';
 import '../more/organization_settings_screen.dart';
+import '../more/roles_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../payments/collect_payment_screen.dart';
 import '../payments/collection_screen.dart';
 import '../payments/payment_approvals_screen.dart';
+import '../payments/payment_detail_screen.dart';
 import '../payments/payment_success_screen.dart';
 import '../profile/member_home_screen.dart';
 import '../reports/monthly_members_screen.dart';
@@ -60,19 +65,20 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
+      final location = state.matchedLocation;
       final localeChosen = ref.read(localeChosenProvider);
-      final choosingLanguage = state.matchedLocation == '/choose-language';
-      if (!localeChosen && !choosingLanguage) return '/choose-language';
-      if (localeChosen && choosingLanguage) return '/splash';
+      final choosingLanguage = location == '/choose-language';
+
+      if (!localeChosen) {
+        return choosingLanguage ? null : '/choose-language';
+      }
+      if (choosingLanguage) return '/splash';
 
       final auth = ref.read(authStateProvider);
-      final loggingIn = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/splash' ||
-          state.matchedLocation == '/join';
-      if (auth == null && !loggingIn) return '/login';
-      if (auth != null &&
-          (state.matchedLocation == '/login' || state.matchedLocation == '/splash')) {
-        return auth.role == UserRole.member ? '/member-home' : '/dashboard';
+      const public = {'/login', '/splash', '/join', '/forgot-password'};
+      if (auth == null && !public.contains(location)) return '/login';
+      if (auth != null && (location == '/login' || location == '/splash')) {
+        return auth.isStaff ? '/dashboard' : '/member-home';
       }
       return null;
     },
@@ -80,6 +86,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/choose-language', builder: (_, __) => const LanguageScreen()),
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      _overlay(
+        path: '/forgot-password',
+        fallback: '/login',
+        builder: (_, state) => ForgotPasswordScreen(
+          initialPhone: state.uri.queryParameters['phone'] ?? '',
+        ),
+      ),
       _overlay(
         path: '/join',
         fallback: '/login',
@@ -101,6 +114,20 @@ final routerProvider = Provider<GoRouter>((ref) {
                   path: ':id',
                   builder: (_, state) =>
                       MemberDetailScreen(memberId: state.pathParameters['id']!),
+                  routes: [
+                    GoRoute(
+                      path: 'payments',
+                      builder: (_, state) => MemberPaymentsScreen(
+                        memberId: state.pathParameters['id']!,
+                      ),
+                    ),
+                    GoRoute(
+                      path: 'donations',
+                      builder: (_, state) => MemberDonationsScreen(
+                        memberId: state.pathParameters['id']!,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -145,10 +172,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             PaymentSuccessScreen(payment: state.extra as PaymentRecord),
       ),
       _overlay(
+        path: '/payment-details/:id',
+        fallback: '/reports',
+        builder: (_, state) => PaymentDetailScreen(
+          paymentId: state.pathParameters['id']!,
+          payment: state.extra is PaymentRecord ? state.extra as PaymentRecord : null,
+        ),
+      ),
+      _overlay(
         path: '/new-donation',
         fallback: '/events',
         builder: (_, state) => NewDonationScreen(
           eventId: state.uri.queryParameters['eventId'],
+          memberId: state.uri.queryParameters['memberId'],
         ),
       ),
       _overlay(
@@ -209,6 +245,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const OrganizationSettingsScreen(),
       ),
       _overlay(
+        path: '/roles',
+        fallback: '/more',
+        builder: (_, __) => const RolesScreen(),
+      ),
+      _overlay(
         path: '/committee',
         fallback: '/more',
         builder: (_, __) => const CommitteeScreen(),
@@ -234,6 +275,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         fallback: '/reports',
         builder: (_, state) => MonthlyMembersScreen(
           filter: state.uri.queryParameters['filter'] ?? 'paid',
+          month: state.uri.queryParameters['month'],
         ),
       ),
       GoRoute(path: '/member-home', builder: (_, __) => const MemberHomeScreen()),

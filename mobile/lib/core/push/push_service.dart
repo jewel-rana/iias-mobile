@@ -58,8 +58,10 @@ class PushService {
 
     try {
       await Firebase.initializeApp();
-    } catch (e) {
-      debugPrint('Firebase not configured: $e');
+    } catch (_) {
+      debugPrint(
+        'Firebase not configured (add android/app/google-services.json to enable push).',
+      );
       return;
     }
 

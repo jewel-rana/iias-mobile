@@ -27,6 +27,8 @@ class MemberDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(memberDetailProvider(memberId));
+    final user = ref.watch(authStateProvider);
+    final canSetRole = user?.can(AppPermission.membersCreate) ?? false;
     final l10n = context.l10n;
 
     return async.when(
@@ -102,10 +104,31 @@ class MemberDetailScreen extends ConsumerWidget {
                             member.phone,
                             style: const TextStyle(color: AppColors.textSecondary),
                           ),
+                          if (member.roleName != null && member.roleName!.isNotEmpty)
+                            InkWell(
+                              onTap: canSetRole ? () => _setRole(context, ref, member) : null,
+                              child: Text(
+                                member.roleName!,
+                                style: const TextStyle(color: AppColors.textSecondary),
+                              ),
+                            )
+                          else if (canSetRole)
+                            TextButton(
+                              onPressed: () => _setRole(context, ref, member),
+                              child: Text(l10n.loginRole),
+                            ),
                           if (member.email != null && member.email!.isNotEmpty)
-                            Text(
-                              member.email!,
-                              style: const TextStyle(color: AppColors.textSecondary),
+                            InkWell(
+                              onTap: () => _setEmail(context, ref, member),
+                              child: Text(
+                                member.email!,
+                                style: const TextStyle(color: AppColors.textSecondary),
+                              ),
+                            )
+                          else
+                            TextButton(
+                              onPressed: () => _setEmail(context, ref, member),
+                              child: Text(l10n.addEmail),
                             ),
                           if (member.joinedAt != null)
                             Text(
@@ -234,7 +257,7 @@ class MemberDetailScreen extends ConsumerWidget {
                       leading: const Icon(Icons.receipt_long),
                       title: Text(l10n.paymentHistory),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () {},
+                      onTap: () => context.push('/members/${member.id}/payments'),
                     ),
                     const Divider(),
                     ListTile(
@@ -242,7 +265,7 @@ class MemberDetailScreen extends ConsumerWidget {
                       leading: const Icon(Icons.volunteer_activism),
                       title: Text(l10n.donations),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () {},
+                      onTap: () => context.push('/members/${member.id}/donations'),
                     ),
                     const Divider(),
                     ListTile(
@@ -296,6 +319,110 @@ class _DueStat extends StatelessWidget {
         ),
         Text(label, style: const TextStyle(color: AppColors.textSecondary)),
       ],
+    );
+  }
+}
+
+Future<void> _setRole(BuildContext context, WidgetRef ref, Member member) async {
+  final l10n = context.l10n;
+  List<AccessRole> roles;
+  try {
+    roles = await ref.read(repositoryProvider).getAccessRoles();
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.toString().replaceFirst(RegExp(r'^Exception: '), ''))),
+    );
+    return;
+  }
+  if (!context.mounted || roles.isEmpty) return;
+  var selected = roles.any((r) => r.id == member.roleId)
+      ? member.roleId
+      : roles.where((r) => r.code == 'member').firstOrNull?.id ?? roles.first.id;
+  final roleId = await showDialog<String>(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setModal) => AlertDialog(
+        title: Text(l10n.loginRole),
+        content: DropdownButton<String>(
+          isExpanded: true,
+          value: selected,
+          items: roles
+              .map(
+                (r) => DropdownMenuItem(
+                  value: r.id,
+                  child: Text(r.name),
+                ),
+              )
+              .toList(),
+          onChanged: (v) => setModal(() => selected = v),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, selected),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (roleId == null || roleId.isEmpty || !context.mounted) return;
+  try {
+    await ref.read(repositoryProvider).updateMember(id: member.id, roleId: roleId);
+    ref.invalidate(memberDetailProvider(member.id));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.loginRoleSaved)),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.toString().replaceFirst(RegExp(r'^Exception: '), ''))),
+    );
+  }
+}
+
+Future<void> _setEmail(BuildContext context, WidgetRef ref, Member member) async {
+  final l10n = context.l10n;
+  final controller = TextEditingController(text: member.email ?? '');
+  final email = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.email),
+      content: TextField(
+        controller: controller,
+        keyboardType: TextInputType.emailAddress,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: 'name@example.com'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, controller.text.trim()),
+          child: Text(l10n.save),
+        ),
+      ],
+    ),
+  );
+  if (email == null || email.isEmpty || !context.mounted) return;
+  try {
+    await ref.read(repositoryProvider).updateMember(id: member.id, email: email);
+    ref.invalidate(memberDetailProvider(member.id));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.emailSaved)),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.toString().replaceFirst(RegExp(r'^Exception: '), ''))),
     );
   }
 }

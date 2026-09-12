@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/language_toggle.dart';
+import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -34,7 +35,7 @@ class MoreScreen extends ConsumerWidget {
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
               subtitle: Text(
-                '${user?.role.name.toUpperCase()} · ${user?.phone ?? ''}',
+                '${user?.roleLabel ?? l10n.user} · ${user?.phone ?? ''}',
               ),
             ),
           ),
@@ -42,77 +43,103 @@ class MoreScreen extends ConsumerWidget {
           SectionCard(
             child: Column(
               children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.bar_chart_rounded),
-                  title: Text(l10n.reports),
-                  subtitle: Text(l10n.reportsSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/reports'),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.account_balance_wallet_outlined),
-                  title: Text(l10n.expenses),
-                  subtitle: Text(l10n.expensesSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/expenses'),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.category_outlined),
-                  title: Text(l10n.expenseHeads),
-                  subtitle: Text(l10n.expenseHeadsSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/expense-heads'),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.groups_2_outlined),
-                  title: Text(l10n.committee),
-                  subtitle: Text(l10n.committeeSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/committee'),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.campaign_outlined),
-                  title: Text(l10n.meetings),
-                  subtitle: Text(l10n.meetingsSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/meetings'),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.how_to_reg),
-                  title: Text(l10n.joinRequests),
-                  subtitle: Text(l10n.joinRequestsSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/join-requests'),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.fact_check_outlined),
-                  title: Text(l10n.paymentApprovals),
-                  subtitle: Text(l10n.paymentApprovalsSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/payment-approvals'),
-                ),
-                const Divider(),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.settings_outlined),
-                  title: Text(l10n.organizationSettings),
-                  subtitle: Text(l10n.organizationSettingsSubtitle),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/organization-settings'),
-                ),
+                if (user?.can(AppPermission.reportsView) ?? true) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.bar_chart_rounded),
+                    title: Text(l10n.reports),
+                    subtitle: Text(l10n.reportsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/reports'),
+                  ),
+                  const Divider(),
+                ],
+                if (user?.can(AppPermission.expensesView) ?? true) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.account_balance_wallet_outlined),
+                    title: Text(l10n.expenses),
+                    subtitle: Text(l10n.expensesSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/expenses'),
+                  ),
+                  const Divider(),
+                ],
+                if (user?.can(AppPermission.expenseHeadsManage) ?? false) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.category_outlined),
+                    title: Text(l10n.expenseHeads),
+                    subtitle: Text(l10n.expenseHeadsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/expense-heads'),
+                  ),
+                  const Divider(),
+                ],
+                if (user?.can(AppPermission.committeeManage) ?? true) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.groups_2_outlined),
+                    title: Text(l10n.committee),
+                    subtitle: Text(l10n.committeeSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/committee'),
+                  ),
+                  const Divider(),
+                ],
+                if (user?.can(AppPermission.meetingsView) ?? true) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.campaign_outlined),
+                    title: Text(l10n.meetings),
+                    subtitle: Text(l10n.meetingsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/meetings'),
+                  ),
+                  const Divider(),
+                ],
+                if (user?.can(AppPermission.joinRequestsManage) ?? true) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.how_to_reg),
+                    title: Text(l10n.joinRequests),
+                    subtitle: Text(l10n.joinRequestsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/join-requests'),
+                  ),
+                  const Divider(),
+                ],
+                if (user?.can(AppPermission.paymentsApprove) ?? true) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.fact_check_outlined),
+                    title: Text(l10n.paymentApprovals),
+                    subtitle: Text(l10n.paymentApprovalsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/payment-approvals'),
+                  ),
+                  const Divider(),
+                ],
+                if (user?.can(AppPermission.rolesManage) ?? false) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.verified_user_outlined),
+                    title: Text(l10n.accessRoles),
+                    subtitle: Text(l10n.accessRolesSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/roles'),
+                  ),
+                  const Divider(),
+                ],
+                if (user?.can(AppPermission.organizationManage) ?? true)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.settings_outlined),
+                    title: Text(l10n.organizationSettings),
+                    subtitle: Text(l10n.organizationSettingsSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/organization-settings'),
+                  ),
               ],
             ),
           ),

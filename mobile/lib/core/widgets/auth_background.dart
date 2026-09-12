@@ -106,11 +106,13 @@ class BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dpr = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 3;
     return Image.asset(
       assetPath,
       height: height,
       fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
+      filterQuality: FilterQuality.medium,
+      cacheHeight: (height * dpr).round().clamp(48, 1024),
     );
   }
 }

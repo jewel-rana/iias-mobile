@@ -41,7 +41,7 @@ class _MeetingDetailScreenState extends ConsumerState<MeetingDetailScreen> {
   }
 
   bool _isStaff(AppUser? user) =>
-      user?.role == UserRole.admin || user?.role == UserRole.collector;
+      user?.can(AppPermission.meetingsManage) == true;
 
   Future<void> _copy(String text, String label) async {
     await Clipboard.setData(ClipboardData(text: text));

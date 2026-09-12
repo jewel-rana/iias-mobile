@@ -37,6 +37,42 @@ class AppLocalizations {
   String get password => _t('Password', 'পাসওয়ার্ড');
   String get rememberMe => _t('Remember me', 'মনে রাখুন');
   String get forgotPassword => _t('Forgot password?', 'পাসওয়ার্ড ভুলে গেছেন?');
+  String get forgotPasswordTitle => _t('Reset password', 'পাসওয়ার্ড রিসেট');
+  String get forgotPasswordHint => _t(
+        'Enter the phone number on your account. We will email a 6-digit code to the address on file. If you never set a password, this will create one.',
+        'আপনার অ্যাকাউন্টের ফোন নম্বর দিন। ফাইলে থাকা ইমেইলে ৬ সংখ্যার কোড পাঠানো হবে। পাসওয়ার্ড না থাকলে এখান থেকে তৈরি হবে।',
+      );
+  String get sendResetCode => _t('Send code', 'কোড পাঠান');
+  String get codeSentHint => _t(
+        'Enter the 6-digit code from your email, then choose a new password.',
+        'ইমেইলের ৬ সংখ্যার কোড দিন, তারপর নতুন পাসওয়ার্ড বেছে নিন।',
+      );
+  String get resetCode => _t('6-digit code', '৬ সংখ্যার কোড');
+  String get newPassword => _t('New password', 'নতুন পাসওয়ার্ড');
+  String get confirmPassword => _t('Confirm password', 'পাসওয়ার্ড নিশ্চিত করুন');
+  String get resetPasswordAction => _t('Update password', 'পাসওয়ার্ড আপডেট');
+  String get resendCode => _t('Resend code', 'আবার কোড পাঠান');
+  String get passwordsDoNotMatch =>
+      _t('Passwords do not match', 'পাসওয়ার্ড মিলছে না');
+  String get passwordTooShort =>
+      _t('Use at least 6 characters', 'কমপক্ষে ৬ অক্ষর দিন');
+  String get enterResetCode => _t('Enter the 6-digit code', '৬ সংখ্যার কোড দিন');
+  String get passwordResetSuccess => _t(
+        'Password updated. You can log in now.',
+        'পাসওয়ার্ড আপডেট হয়েছে। এখন লগইন করতে পারেন।',
+      );
+  String get codeSent => _t(
+        'If this number is registered, a reset code was emailed.',
+        'এই নম্বর নিবন্ধিত থাকলে ইমেইলে রিসেট কোড পাঠানো হয়েছে।',
+      );
+  String codeSentTo(String hint) => _t(
+        'We emailed a code to $hint',
+        '$hint-এ কোড ইমেইল করা হয়েছে',
+      );
+  String debugResetCode(String code) => _t(
+        'Development code: $code',
+        'ডেভেলপমেন্ট কোড: $code',
+      );
   String get alreadyHaveAccount => _t('Already have an account? ', 'ইতিমধ্যে অ্যাকাউন্ট আছে? ');
   String get dontHaveAccount => _t("Don't have an account? ", 'অ্যাকাউন্ট নেই? ');
   String get joinNow => _t('Join Now', 'এখনই যোগ দিন');
@@ -55,6 +91,7 @@ class AppLocalizations {
   String get reports => _t('Reports', 'রিপোর্ট');
   String get reportsSubtitle =>
       _t('Monthly collection summary', 'মাসিক কালেকশনের সারসংক্ষেপ');
+  String get selectMonth => _t('Select month', 'মাস বেছে নিন');
   String get expenses => _t('Expenses', 'ব্যয়');
   String get expensesSubtitle =>
       _t('Salary, festival bonus & spending', 'বেতন, উৎসব বোনাস ও খরচ');
@@ -64,6 +101,53 @@ class AppLocalizations {
   String get committee => _t('Organizing Committee', 'সংগঠক কমিটি');
   String get committeeSubtitle =>
       _t('Chairman, Secretary & other roles', 'সভাপতি, সম্পাদক ও অন্যান্য পদ');
+  String get accessRoles => _t('Login roles', 'লগইন রোল');
+  String get accessRolesSubtitle =>
+      _t('Member, collector, admin & custom permissions', 'সদস্য, কালেক্টর, অ্যাডমিন ও অনুমতি');
+  String get newAccessRole => _t('New role', 'নতুন রোল');
+  String get editAccessRole => _t('Edit role', 'রোল সম্পাদনা');
+  String get noAccessRolesYet => _t('No roles yet', 'এখনো কোনো রোল নেই');
+  String get systemRole => _t('System', 'সিস্টেম');
+  String get loginRole => _t('Login role', 'লগইন রোল');
+  String get loginRoleSaved => _t('Login role saved', 'লগইন রোল সংরক্ষিত');
+  String get permissions => _t('Permissions', 'অনুমতি');
+  String get adminHasAllPermissions =>
+      _t('Admin always has every permission.', 'অ্যাডমিন সব অনুমতি পায়।');
+  String permissionCount(int n) => _t('$n permissions', '$n-টি অনুমতি');
+  String deleteRoleHint(String name) =>
+      _t('Delete the $name role?', '$name রোল মুছবেন?');
+  String permissionGroup(String group) => switch (group) {
+        'Members' => _t('Members', 'সদস্য'),
+        'Collection' => _t('Collection', 'কালেকশন'),
+        'Funds' => _t('Funds', 'তহবিল'),
+        'Expenses' => _t('Expenses', 'ব্যয়'),
+        'Reports' => _t('Reports', 'রিপোর্ট'),
+        'Join requests' => _t('Join requests', 'যোগদানের আবেদন'),
+        'Committee' => _t('Committee', 'কমিটি'),
+        'Meetings' => _t('Meetings', 'সভা'),
+        'Settings' => _t('Settings', 'সেটিংস'),
+        _ => group,
+      };
+  String permissionLabel(String key) => switch (key) {
+        'members.view' => _t('View members', 'সদস্য দেখা'),
+        'members.create' => _t('Add members', 'সদস্য যোগ'),
+        'collection.view' => _t('View collection', 'কালেকশন দেখা'),
+        'collection.collect' => _t('Collect payments', 'পেমেন্ট গ্রহণ'),
+        'payments.approve' => _t('Approve payments', 'পেমেন্ট অনুমোদন'),
+        'funds.view' => _t('View funds', 'তহবিল দেখা'),
+        'funds.manage' => _t('Manage campaigns', 'ক্যাম্পেইন পরিচালনা'),
+        'expenses.view' => _t('View expenses', 'ব্যয় দেখা'),
+        'expenses.create' => _t('Add expenses', 'ব্যয় যোগ'),
+        'expense_heads.manage' => _t('Manage expense heads', 'ব্যয়ের খাত'),
+        'reports.view' => _t('View reports', 'রিপোর্ট দেখা'),
+        'join_requests.manage' => _t('Manage join requests', 'যোগদানের আবেদন'),
+        'committee.manage' => _t('Manage committee', 'কমিটি পরিচালনা'),
+        'meetings.view' => _t('View meetings', 'সভা দেখা'),
+        'meetings.manage' => _t('Open meetings', 'সভা খোলা'),
+        'organization.manage' => _t('Organization settings', 'সংগঠনের সেটিংস'),
+        'roles.manage' => _t('Manage login roles', 'লগইন রোল'),
+        _ => key,
+      };
   String get meetings => _t('Meetings', 'সভা');
   String get meetingsSubtitle => _t(
         'Open a meeting, notify members & share WhatsApp',
@@ -141,6 +225,10 @@ class AppLocalizations {
   String get quoteAuthor => _t('— Prophet Muhammad ﷺ', '— রাসূলুল্লাহ ﷺ');
   String get loginUnable =>
       _t('Unable to login. Try again.', 'লগইন করা যায়নি। আবার চেষ্টা করুন।');
+  String get memberPasswordNotSet => _t(
+        'No password yet. Use Forgot password to create one.',
+        'এখনো পাসওয়ার্ড নেই। ‘পাসওয়ার্ড ভুলে গেছেন?’ থেকে একটি তৈরি করুন।',
+      );
 
   String get thisMonthCollection =>
       _t('This Month Collection', 'এই মাসের কালেকশন');
@@ -344,6 +432,10 @@ class AppLocalizations {
   String get publicJoin =>
       _t('Public join applications', 'পাবলিক যোগদানের আবেদন');
   String get paymentHistory => _t('Payment History', 'পেমেন্ট ইতিহাস');
+  String get paymentDetails => _t('Payment details', 'পেমেন্ট বিবরণ');
+  String get noMembersThisFilter =>
+      _t('No members in this list', 'এই তালিকায় কোনো সদস্য নেই');
+  String get noDonationsYet => _t('No donations yet', 'এখনো কোনো দান নেই');
   String get myContribution => _t('My Contribution', 'আমার অবদান');
   String get totalPaid => _t('Total Paid', 'মোট পরিশোধ');
   String get outstanding => _t('Outstanding', 'বকেয়া');
@@ -371,6 +463,8 @@ class AppLocalizations {
   String get fullName => _t('Full Name', 'পূর্ণ নাম');
   String get phoneNumber => _t('Phone Number', 'ফোন নম্বর');
   String get email => _t('Email', 'ইমেইল');
+  String get addEmail => _t('Add email', 'ইমেইল যোগ করুন');
+  String get emailSaved => _t('Email saved', 'ইমেইল সংরক্ষিত');
   String get newMemberDetails => _t('New member details', 'নতুন সদস্যের বিবরণ');
   String get memberAdded => _t(
         'Member added. Record payment for due months.',
@@ -607,8 +701,8 @@ class AppLocalizations {
   String get addExpenseTooltip => _t('Add expense', 'ব্যয় যোগ');
   String reasonLabel(String r) => _t('Reason: $r', 'কারণ: $r');
   String approveMemberHint(String name, String phone) => _t(
-        'Create a member account for $name ($phone)?',
-        '$name ($phone)-এর জন্য সদস্য অ্যাকাউন্ট তৈরি করবেন?',
+        'Create a member record for $name ($phone)? They can log in after setting a password with Forgot password.',
+        '$name ($phone)-এর জন্য সদস্য রেকর্ড তৈরি করবেন? পাসওয়ার্ড ভুলে গেছেন থেকে পাসওয়ার্ড সেট করে তারা লগইন করতে পারবেন।',
       );
   String walletLine(String v) => _t('Wallet: $v', 'ওয়ালেট: $v');
   String txnLine(String v) => _t('Txn: $v', 'ট্রানজেকশন: $v');

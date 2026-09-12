@@ -8,8 +8,23 @@ import '../models/models.dart';
 import 'api_app_repository.dart';
 import 'payment_allocator.dart';
 
+class PasswordResetChallenge {
+  const PasswordResetChallenge({this.debugCode, this.emailHint});
+
+  final String? debugCode;
+  final String? emailHint;
+}
+
 abstract class AppRepository {
   Future<AppUser?> login(String phone, String password);
+  /// Emails a reset code. [debugCode] is only present when the API mailer is log/array.
+  Future<PasswordResetChallenge> requestPasswordReset(String phone);
+  Future<void> resetPassword({
+    required String phone,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  });
   Future<void> logout();
   Future<AppUser?> restoreSession();
   AppUser? get currentUser;
@@ -20,7 +35,11 @@ abstract class AppRepository {
   });
   Future<void> unregisterDeviceToken(String token);
   Future<DashboardStats> getDashboard();
-  Future<List<Member>> getMembers({String query = '', MemberPaymentStatus? status});
+  Future<List<Member>> getMembers({
+    String query = '',
+    MemberPaymentStatus? status,
+    DateTime? billingMonth,
+  });
   Future<Member?> getMember(String id);
   Future<Member> createMember({
     required String name,
@@ -29,6 +48,12 @@ abstract class AppRepository {
     String? collectorName,
     String? email,
     DateTime? joinedAt,
+    String? roleId,
+  });
+  Future<Member> updateMember({
+    required String id,
+    String? email,
+    String? roleId,
   });
   Future<List<MonthlyDue>> getMemberDues(String memberId);
   Future<PaymentRecord> createPayment({
@@ -40,7 +65,12 @@ abstract class AppRepository {
     String? walletAccount,
     String? transactionId,
   });
-  Future<List<PaymentRecord>> getPayments({PaymentStatus? status});
+  Future<List<PaymentRecord>> getPayments({
+    PaymentStatus? status,
+    String? memberId,
+    DateTime? billingMonth,
+  });
+  Future<PaymentRecord> getPayment(String id);
   Future<PaymentRecord> approvePayment(String id);
   Future<PaymentRecord> rejectPayment(String id, {String? reason});
   Future<List<FundraisingEvent>> getEvents({bool activeOnly = false});  Future<FundraisingEvent> createFundraisingEvent({
@@ -58,8 +88,10 @@ abstract class AppRepository {
     required int amount,
     required PaymentMethod method,
     String? referredByMemberId,
+    String? memberId,
   });
-  Future<ReportSummary> getReport();
+  Future<List<EventDonation>> getEventDonations({String? memberId});
+  Future<ReportSummary> getReport({DateTime? month});
   Future<List<PaymentRecord>> getRecentPayments();
   Future<List<Expense>> getExpenses({
     ExpenseRecurrence? recurrence,
@@ -89,6 +121,14 @@ abstract class AppRepository {
   });
   Future<ExpenseHead> updateExpenseHead(ExpenseHead head);
   Future<void> deleteExpenseHead(String id);
+  Future<List<AccessRole>> getAccessRoles({bool activeOnly = true});
+  Future<AccessRole> createAccessRole({
+    required String name,
+    List<String> permissions = const [],
+    bool isActive = true,
+  });
+  Future<AccessRole> updateAccessRole(AccessRole role);
+  Future<void> deleteAccessRole(String id);
   Future<List<JoinRequest>> getJoinRequests({JoinRequestStatus? status});
   Future<JoinRequest> submitJoinRequest({
     required String fullName,
@@ -149,6 +189,33 @@ class MockAppRepository implements AppRepository {
   final _donations = [...MockData.eventDonations];
   final _expenses = [...MockData.expenses];
   final _expenseHeads = [...MockData.expenseHeads];
+  final _accessRoles = <AccessRole>[
+    const AccessRole(
+      id: 'r-admin',
+      name: 'Admin',
+      code: 'admin',
+      isSystem: true,
+      isActive: true,
+      sortOrder: 1,
+      permissions: ['*'],
+    ),
+    const AccessRole(
+      id: 'r-collector',
+      name: 'Collector',
+      code: 'collector',
+      isSystem: true,
+      isActive: true,
+      sortOrder: 2,
+    ),
+    const AccessRole(
+      id: 'r-member',
+      name: 'Member',
+      code: 'member',
+      isSystem: true,
+      isActive: true,
+      sortOrder: 3,
+    ),
+  ];
   final _joinRequests = [...MockData.joinRequests];
   final _committeeRoles = [...MockData.committeeRoles];
   final _committeeMembers = [...MockData.committeeMembers];
@@ -169,6 +236,25 @@ class MockAppRepository implements AppRepository {
       _user = MockData.admin;
     }
     return _user;
+  }
+
+  @override
+  Future<PasswordResetChallenge> requestPasswordReset(String phone) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    return const PasswordResetChallenge(
+      debugCode: '111111',
+      emailHint: 't***@example.com',
+    );
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String phone,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
   }
 
   @override
@@ -213,6 +299,7 @@ class MockAppRepository implements AppRepository {
   Future<List<Member>> getMembers({
     String query = '',
     MemberPaymentStatus? status,
+    DateTime? billingMonth,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     return _members.where((m) {
@@ -243,6 +330,7 @@ class MockAppRepository implements AppRepository {
     String? collectorName,
     String? email,
     DateTime? joinedAt,
+    String? roleId,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
     final next = _members.length + 1024;
@@ -272,9 +360,58 @@ class MockAppRepository implements AppRepository {
       referralCode: '${initials.isEmpty ? 'MB' : initials}-$next',
       email: email?.trim().isEmpty == true ? null : email?.trim(),
       joinedAt: joinedAt ?? DateTime.now(),
+      roleId: roleId,
+      roleName: _accessRoles
+          .where((r) => r.id == roleId)
+          .map((r) => r.name)
+          .cast<String?>()
+          .followedBy(const ['Member'])
+          .first,
     );
     _members.insert(0, member);
     return member;
+  }
+
+  @override
+  Future<Member> updateMember({
+    required String id,
+    String? email,
+    String? roleId,
+  }) async {
+    final idx = _members.indexWhere((m) => m.id == id);
+    if (idx < 0) {
+      throw Exception('Member not found');
+    }
+    final current = _members[idx];
+    final updated = Member(
+      id: current.id,
+      memberCode: current.memberCode,
+      name: current.name,
+      phone: current.phone,
+      monthlyAmount: current.monthlyAmount,
+      collectorName: current.collectorName,
+      status: current.status,
+      totalPaid: current.totalPaid,
+      outstanding: current.outstanding,
+      advance: current.advance,
+      paidMonths: current.paidMonths,
+      dueMonths: current.dueMonths,
+      advanceMonths: current.advanceMonths,
+      referralCode: current.referralCode,
+      email: email ?? current.email,
+      joinedAt: current.joinedAt,
+      roleId: roleId ?? current.roleId,
+      roleName: roleId == null
+          ? current.roleName
+          : _accessRoles
+              .where((r) => r.id == roleId)
+              .map((r) => r.name)
+              .cast<String?>()
+              .followedBy([current.roleName])
+              .first,
+    );
+    _members[idx] = updated;
+    return updated;
   }
 
   @override
@@ -332,10 +469,26 @@ class MockAppRepository implements AppRepository {
   }
 
   @override
-  Future<List<PaymentRecord>> getPayments({PaymentStatus? status}) async {
+  Future<List<PaymentRecord>> getPayments({
+    PaymentStatus? status,
+    String? memberId,
+    DateTime? billingMonth,
+  }) async {
     await Future<void>.delayed(const Duration(milliseconds: 200));
-    if (status == null) return List.of(_payments);
-    return _payments.where((p) => p.status == status).toList();
+    return _payments.where((p) {
+      final matchesStatus = status == null || p.status == status;
+      final matchesMember = memberId == null || p.memberId == memberId;
+      final matchesMonth = billingMonth == null ||
+          p.allocations.any((a) =>
+              a.billingMonth.year == billingMonth.year &&
+              a.billingMonth.month == billingMonth.month);
+      return matchesStatus && matchesMember && matchesMonth;
+    }).toList();
+  }
+
+  @override
+  Future<PaymentRecord> getPayment(String id) async {
+    return _payments.firstWhere((p) => p.id == id);
   }
 
   @override
@@ -435,6 +588,7 @@ class MockAppRepository implements AppRepository {
     required int amount,
     required PaymentMethod method,
     String? referredByMemberId,
+    String? memberId,
   }) async {
     await Future<void>.delayed(const Duration(milliseconds: 500));
     final event = _events.firstWhere((e) => e.id == eventId);
@@ -454,6 +608,7 @@ class MockAppRepository implements AppRepository {
       method: method,
       date: DateTime.now(),
       referredByName: referredName,
+      memberId: donorType == DonorType.member ? memberId : null,
     );
     _donations.insert(0, donation);
     final idx = _events.indexWhere((e) => e.id == eventId);
@@ -473,7 +628,28 @@ class MockAppRepository implements AppRepository {
   }
 
   @override
-  Future<ReportSummary> getReport() async => MockData.report;
+  Future<List<EventDonation>> getEventDonations({String? memberId}) async {
+    return _donations.where((d) => memberId == null || d.memberId == memberId).toList();
+  }
+
+  @override
+  Future<ReportSummary> getReport({DateTime? month}) async {
+    final m = month ?? DateTime.now();
+    const names = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    return ReportSummary(
+      monthLabel: '${names[m.month - 1]} ${m.year}',
+      expected: MockData.report.expected,
+      collected: MockData.report.collected,
+      outstanding: MockData.report.outstanding,
+      paidMembers: MockData.report.paidMembers,
+      partialMembers: MockData.report.partialMembers,
+      unpaidMembers: MockData.report.unpaidMembers,
+      advancePaidMembers: MockData.report.advancePaidMembers,
+    );
+  }
 
   @override
   Future<List<PaymentRecord>> getRecentPayments() async => _payments;
@@ -624,6 +800,43 @@ class MockAppRepository implements AppRepository {
       return;
     }
     _expenseHeads.removeAt(idx);
+  }
+
+  @override
+  Future<List<AccessRole>> getAccessRoles({bool activeOnly = true}) async {
+    return _accessRoles.where((r) => !activeOnly || r.isActive).toList();
+  }
+
+  @override
+  Future<AccessRole> createAccessRole({
+    required String name,
+    List<String> permissions = const [],
+    bool isActive = true,
+  }) async {
+    final role = AccessRole(
+      id: _uuid.v4(),
+      name: name.trim(),
+      code: name.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_'),
+      isSystem: false,
+      isActive: isActive,
+      sortOrder: _accessRoles.length + 1,
+      permissions: permissions,
+    );
+    _accessRoles.add(role);
+    return role;
+  }
+
+  @override
+  Future<AccessRole> updateAccessRole(AccessRole role) async {
+    final idx = _accessRoles.indexWhere((r) => r.id == role.id);
+    if (idx < 0) throw StateError('Role not found');
+    _accessRoles[idx] = role;
+    return role;
+  }
+
+  @override
+  Future<void> deleteAccessRole(String id) async {
+    _accessRoles.removeWhere((r) => r.id == id && !r.isSystem);
   }
 
   @override

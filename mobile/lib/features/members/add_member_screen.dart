@@ -33,6 +33,26 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
   bool _recordOpening = false;
   PaymentMethod _openingMethod = PaymentMethod.cashToCollector;
   bool _loading = false;
+  List<AccessRole> _roles = [];
+  String? _roleId;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadRoles);
+  }
+
+  Future<void> _loadRoles() async {
+    try {
+      final roles = await ref.read(repositoryProvider).getAccessRoles();
+      if (!mounted) return;
+      final memberRole = roles.where((r) => r.code == 'member').toList();
+      setState(() {
+        _roles = roles;
+        _roleId = memberRole.isNotEmpty ? memberRole.first.id : (roles.isNotEmpty ? roles.first.id : null);
+      });
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -87,6 +107,7 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
             collectorName: _collector.text.trim(),
             email: _email.text.trim(),
             joinedAt: _joinedAt,
+            roleId: _roleId,
           );
       ref.invalidate(membersProvider);
       ref.invalidate(dashboardProvider);
@@ -198,17 +219,31 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: l10n.emailOptional,
+                      labelText: l10n.email,
                       hintText: 'name@example.com',
                     ),
                     validator: (v) {
                       final value = v?.trim() ?? '';
-                      if (value.isEmpty) return null;
+                      if (value.isEmpty) return l10n.requiredField;
                       if (!value.contains('@') || !value.contains('.')) {
                         return l10n.enterValidEmail;
                       }
                       return null;
                     },
+                  ),
+                  const SizedBox(height: 14),
+                  DropdownButtonFormField<String>(
+                    initialValue: _roles.any((r) => r.id == _roleId) ? _roleId : null,
+                    decoration: InputDecoration(labelText: l10n.loginRole),
+                    items: _roles
+                        .map(
+                          (r) => DropdownMenuItem(
+                            value: r.id,
+                            child: Text(r.name),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _roleId = v),
                   ),
                   const SizedBox(height: 14),
                   ListTile(

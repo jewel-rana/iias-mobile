@@ -88,6 +88,16 @@ class ApiAppRepository implements AppRepository {
   @override
   AppUser? get currentUser => _user;
 
+  AppUser _mapUser(Map<String, dynamic> u) => AppUser(
+        id: u['id'].toString(),
+        name: u['name'] as String,
+        phone: u['phone'] as String,
+        role: _role(u['role'] as String?),
+        roleName: u['role_name'] as String?,
+        memberId: u['member_id']?.toString(),
+        permissions: ((u['permissions'] as List?) ?? []).map((e) => e.toString()).toList(),
+      );
+
   UserRole _role(String? value) {
     switch (value) {
       case 'admin':
@@ -177,6 +187,9 @@ class ApiAppRepository implements AppRepository {
         joinedAt: json['joined_at'] != null
             ? DateTime.tryParse(json['joined_at'] as String)
             : null,
+        roleId: json['role_id']?.toString(),
+        roleName: json['role_name'] as String?,
+        roleCode: json['role_code'] as String?,
       );
 
   FundraisingEvent _mapEvent(Map<String, dynamic> json) => FundraisingEvent(
@@ -233,6 +246,7 @@ class ApiAppRepository implements AppRepository {
         method: _methodFromApi(json['payment_method'] as String?),
         date: DateTime.parse(json['payment_date'] as String),
         referredByName: json['referred_by_name'] as String?,
+        memberId: json['member_id']?.toString(),
       );
 
   String _messageFromDio(DioException e, {String fallback = 'Request failed'}) {
@@ -260,16 +274,48 @@ class ApiAppRepository implements AppRepository {
       final token = res.data['token'] as String;
       await _storage.write(key: 'auth_token', value: token);
       final u = res.data['user'] as Map<String, dynamic>;
-      _user = AppUser(
-        id: u['id'].toString(),
-        name: u['name'] as String,
-        phone: u['phone'] as String,
-        role: _role(u['role'] as String?),
-        memberId: u['member_id']?.toString(),
-      );
+      _user = _mapUser(u);
       return _user;
     } on DioException catch (e) {
       throw Exception(_messageFromDio(e, fallback: 'Unable to login. Try again.'));
+    }
+  }
+
+  @override
+  Future<PasswordResetChallenge> requestPasswordReset(String phone) async {
+    try {
+      final res = await _dio.post('/auth/forgot-password', data: {'phone': phone});
+      final data = res.data;
+      if (data is! Map) {
+        return const PasswordResetChallenge();
+      }
+      final code = data['debug_code'];
+      final hint = data['email_hint'];
+      return PasswordResetChallenge(
+        debugCode: code is String && code.isNotEmpty ? code : null,
+        emailHint: hint is String && hint.isNotEmpty ? hint : null,
+      );
+    } on DioException catch (e) {
+      throw Exception(_messageFromDio(e, fallback: 'Unable to send reset code.'));
+    }
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String phone,
+    required String code,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      await _dio.post('/auth/reset-password', data: {
+        'phone': phone,
+        'code': code,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      });
+    } on DioException catch (e) {
+      throw Exception(_messageFromDio(e, fallback: 'Unable to reset password.'));
     }
   }
 
@@ -292,13 +338,7 @@ class ApiAppRepository implements AppRepository {
     try {
       final res = await _dio.get('/me');
       final u = res.data as Map<String, dynamic>;
-      _user = AppUser(
-        id: u['id'].toString(),
-        name: u['name'] as String,
-        phone: u['phone'] as String,
-        role: _role(u['role'] as String?),
-        memberId: u['member_id']?.toString(),
-      );
+      _user = _mapUser(u);
       return _user;
     } catch (_) {
       await _storage.delete(key: 'auth_token');
@@ -349,10 +389,14 @@ class ApiAppRepository implements AppRepository {
   Future<List<Member>> getMembers({
     String query = '',
     MemberPaymentStatus? status,
+    DateTime? billingMonth,
   }) async {
     final res = await _dio.get('/members', queryParameters: {
       if (query.isNotEmpty) 'query': query,
       if (status != null) 'status': status.name,
+      if (billingMonth != null)
+        'billing_month':
+            '${billingMonth.year.toString().padLeft(4, '0')}-${billingMonth.month.toString().padLeft(2, '0')}-01',
     });
     final list = (res.data['data'] as List).cast<Map<String, dynamic>>();
     return list.map(_mapMember).toList();
@@ -372,6 +416,7 @@ class ApiAppRepository implements AppRepository {
     String? collectorName,
     String? email,
     DateTime? joinedAt,
+    String? roleId,
   }) async {
     final joined = joinedAt ?? DateTime.now();
     final res = await _dio.post('/members', data: {
@@ -382,6 +427,20 @@ class ApiAppRepository implements AppRepository {
           '${joined.year.toString().padLeft(4, '0')}-${joined.month.toString().padLeft(2, '0')}-${joined.day.toString().padLeft(2, '0')}',
       if (collectorName != null && collectorName.isNotEmpty) 'collector_name': collectorName,
       if (email != null && email.isNotEmpty) 'email': email,
+      if (roleId != null && roleId.isNotEmpty) 'role_id': int.tryParse(roleId) ?? roleId,
+    });
+    return _mapMember(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<Member> updateMember({
+    required String id,
+    String? email,
+    String? roleId,
+  }) async {
+    final res = await _dio.put('/members/$id', data: {
+      if (email != null) 'email': email,
+      if (roleId != null && roleId.isNotEmpty) 'role_id': int.tryParse(roleId) ?? roleId,
     });
     return _mapMember(res.data as Map<String, dynamic>);
   }
@@ -434,12 +493,26 @@ class ApiAppRepository implements AppRepository {
   }
 
   @override
-  Future<List<PaymentRecord>> getPayments({PaymentStatus? status}) async {
+  Future<List<PaymentRecord>> getPayments({
+    PaymentStatus? status,
+    String? memberId,
+    DateTime? billingMonth,
+  }) async {
     final res = await _dio.get('/payments', queryParameters: {
       if (status != null) 'status': status.name,
+      if (memberId != null && memberId.isNotEmpty) 'member_id': int.tryParse(memberId) ?? memberId,
+      if (billingMonth != null)
+        'billing_month':
+            '${billingMonth.year.toString().padLeft(4, '0')}-${billingMonth.month.toString().padLeft(2, '0')}-01',
     });
     final list = (res.data['data'] as List).cast<Map<String, dynamic>>();
     return list.map(_mapPayment).toList();
+  }
+
+  @override
+  Future<PaymentRecord> getPayment(String id) async {
+    final res = await _dio.get('/payments/$id');
+    return _mapPayment(res.data as Map<String, dynamic>);
   }
 
   @override
@@ -492,6 +565,7 @@ class ApiAppRepository implements AppRepository {
     required int amount,
     required PaymentMethod method,
     String? referredByMemberId,
+    String? memberId,
   }) async {
     final res = await _dio.post('/events/$eventId/donations', data: {
       'donor_type': donorType == DonorType.member ? 'member' : 'non_member',
@@ -500,14 +574,29 @@ class ApiAppRepository implements AppRepository {
       'amount': amount,
       'payment_method': _methodToApi(method),
       if (referredByMemberId != null) 'referred_by_member_id': int.parse(referredByMemberId),
+      if (memberId != null && memberId.isNotEmpty && donorType == DonorType.member)
+        'member_id': int.tryParse(memberId) ?? memberId,
       'idempotency_key': _uuid.v4(),
     });
     return _mapDonation(res.data as Map<String, dynamic>);
   }
 
   @override
-  Future<ReportSummary> getReport() async {
-    final res = await _dio.get('/reports/monthly-collection');
+  Future<List<EventDonation>> getEventDonations({String? memberId}) async {
+    final res = await _dio.get('/donations', queryParameters: {
+      if (memberId != null && memberId.isNotEmpty) 'member_id': int.tryParse(memberId) ?? memberId,
+    });
+    final list = (res.data['data'] as List).cast<Map<String, dynamic>>();
+    return list.map(_mapDonation).toList();
+  }
+
+  @override
+  Future<ReportSummary> getReport({DateTime? month}) async {
+    final selected = month ?? DateTime.now();
+    final res = await _dio.get('/reports/monthly-collection', queryParameters: {
+      'month':
+          '${selected.year.toString().padLeft(4, '0')}-${selected.month.toString().padLeft(2, '0')}',
+    });
     final d = res.data as Map<String, dynamic>;
     return ReportSummary(
       monthLabel: d['month_label'] as String,
@@ -623,6 +712,54 @@ class ApiAppRepository implements AppRepository {
   @override
   Future<void> deleteExpenseHead(String id) async {
     await _dio.delete('/expense-heads/$id');
+  }
+
+  AccessRole _mapAccessRole(Map<String, dynamic> json) => AccessRole(
+        id: json['id'].toString(),
+        name: json['name'] as String,
+        code: json['code'] as String,
+        isSystem: json['is_system'] == true,
+        isActive: json['is_active'] != false,
+        sortOrder: (json['sort_order'] as int?) ?? 0,
+        permissions: ((json['permissions'] as List?) ?? []).map((e) => e.toString()).toList(),
+      );
+
+  @override
+  Future<List<AccessRole>> getAccessRoles({bool activeOnly = true}) async {
+    final res = await _dio.get('/roles', queryParameters: {
+      'active_only': activeOnly,
+    });
+    final list = (res.data['data'] as List).cast<Map<String, dynamic>>();
+    return list.map(_mapAccessRole).toList();
+  }
+
+  @override
+  Future<AccessRole> createAccessRole({
+    required String name,
+    List<String> permissions = const [],
+    bool isActive = true,
+  }) async {
+    final res = await _dio.post('/roles', data: {
+      'name': name,
+      'permissions': permissions,
+      'is_active': isActive,
+    });
+    return _mapAccessRole(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<AccessRole> updateAccessRole(AccessRole role) async {
+    final res = await _dio.put('/roles/${role.id}', data: {
+      'name': role.name,
+      'is_active': role.isActive,
+      'permissions': role.permissions,
+    });
+    return _mapAccessRole(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> deleteAccessRole(String id) async {
+    await _dio.delete('/roles/$id');
   }
 
   @override

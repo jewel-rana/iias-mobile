@@ -103,14 +103,93 @@ class AppUser {
     required this.name,
     required this.phone,
     required this.role,
+    this.roleName,
     this.memberId,
+    this.permissions = const [],
   });
 
   final String id;
   final String name;
   final String phone;
   final UserRole role;
+  final String? roleName;
   final String? memberId;
+  final List<String> permissions;
+
+  bool can(String permission) {
+    if (role == UserRole.admin || permissions.contains('*')) return true;
+    if (permissions.contains(permission)) return true;
+    if (permissions.isEmpty && role == UserRole.collector) {
+      return permission != AppPermission.rolesManage &&
+          permission != AppPermission.organizationManage &&
+          permission != AppPermission.expenseHeadsManage &&
+          permission != AppPermission.committeeManage;
+    }
+    return false;
+  }
+
+  bool get isStaff =>
+      role == UserRole.admin ||
+      role == UserRole.collector ||
+      can(AppPermission.membersView) ||
+      can(AppPermission.collectionView) ||
+      can(AppPermission.rolesManage);
+
+  String get roleLabel => (roleName != null && roleName!.isNotEmpty)
+      ? roleName!
+      : role.name;
+}
+
+class AppPermission {
+  static const membersView = 'members.view';
+  static const membersCreate = 'members.create';
+  static const collectionView = 'collection.view';
+  static const collectionCollect = 'collection.collect';
+  static const paymentsApprove = 'payments.approve';
+  static const fundsView = 'funds.view';
+  static const fundsManage = 'funds.manage';
+  static const expensesView = 'expenses.view';
+  static const expensesCreate = 'expenses.create';
+  static const expenseHeadsManage = 'expense_heads.manage';
+  static const reportsView = 'reports.view';
+  static const joinRequestsManage = 'join_requests.manage';
+  static const committeeManage = 'committee.manage';
+  static const meetingsView = 'meetings.view';
+  static const meetingsManage = 'meetings.manage';
+  static const organizationManage = 'organization.manage';
+  static const rolesManage = 'roles.manage';
+
+  static const groups = <String, List<String>>{
+    'Members': [membersView, membersCreate],
+    'Collection': [collectionView, collectionCollect, paymentsApprove],
+    'Funds': [fundsView, fundsManage],
+    'Expenses': [expensesView, expensesCreate, expenseHeadsManage],
+    'Reports': [reportsView],
+    'Join requests': [joinRequestsManage],
+    'Committee': [committeeManage],
+    'Meetings': [meetingsView, meetingsManage],
+    'Settings': [organizationManage, rolesManage],
+  };
+}
+
+class AccessRole {
+  const AccessRole({
+    required this.id,
+    required this.name,
+    required this.code,
+    required this.isSystem,
+    required this.isActive,
+    this.sortOrder = 0,
+    this.permissions = const [],
+  });
+
+  final String id;
+  final String name;
+  final String code;
+  final bool isSystem;
+  final bool isActive;
+  final int sortOrder;
+  final List<String> permissions;
 }
 
 class Member {
@@ -131,6 +210,9 @@ class Member {
     required this.referralCode,
     this.email,
     this.joinedAt,
+    this.roleId,
+    this.roleName,
+    this.roleCode,
   });
 
   final String id;
@@ -149,6 +231,9 @@ class Member {
   final String referralCode;
   final String? email;
   final DateTime? joinedAt;
+  final String? roleId;
+  final String? roleName;
+  final String? roleCode;
 }
 
 class MonthlyDue {
@@ -258,6 +343,7 @@ class EventDonation {
     required this.method,
     required this.date,
     this.referredByName,
+    this.memberId,
   });
 
   final String id;
@@ -271,6 +357,7 @@ class EventDonation {
   final PaymentMethod method;
   final DateTime date;
   final String? referredByName;
+  final String? memberId;
 }
 
 class Expense {

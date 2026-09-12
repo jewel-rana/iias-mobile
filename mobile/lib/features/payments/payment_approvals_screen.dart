@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -158,6 +159,14 @@ class PaymentApprovalsScreen extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            InkWell(
+                              onTap: () => context.push(
+                                '/payment-details/${p.id}',
+                                extra: p,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                             Row(
                               children: [
                                 Expanded(
@@ -214,6 +223,9 @@ class PaymentApprovalsScreen extends ConsumerWidget {
                                   '${DateFormat('MMM yyyy').format(a.billingMonth)} · ৳ ${a.amount}',
                                   style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                                 ),
+                              ),
+                            ),
+                                ],
                               ),
                             ),
                             if (p.isPending) ...[

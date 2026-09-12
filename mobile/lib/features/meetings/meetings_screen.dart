@@ -21,7 +21,7 @@ class MeetingsScreen extends ConsumerWidget {
   const MeetingsScreen({super.key});
 
   bool _isStaff(AppUser? user) =>
-      user?.role == UserRole.admin || user?.role == UserRole.collector;
+      user?.can(AppPermission.meetingsManage) == true;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

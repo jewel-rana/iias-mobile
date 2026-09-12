@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,12 +14,11 @@ import 'data/repositories/app_repository.dart';
 import 'features/shell/app_router.dart';
 import 'l10n/app_localizations.dart';
 
+bool _backgroundServicesStarted = false;
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _loadEnv();
-  await initializeDateFormatting('bn');
-  await initializeDateFormatting('en');
-  await PushService.instance.initialize();
   final localeChoice = await loadLocaleChoice();
   runApp(
     ProviderScope(
@@ -40,11 +41,27 @@ Future<void> _loadEnv() async {
   );
 }
 
+Future<void> _startBackgroundServices() async {
+  await Future.wait([
+    initializeDateFormatting('bn'),
+    initializeDateFormatting('en'),
+    PushService.instance.initialize(),
+  ]);
+  PushService.instance.flushPending();
+}
+
 class UmmahConnectApp extends ConsumerWidget {
   const UmmahConnectApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!_backgroundServicesStarted) {
+      _backgroundServicesStarted = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_startBackgroundServices());
+      });
+    }
+
     final locale = ref.watch(localeProvider);
     final authReady = ref.watch(authReadyProvider);
     final theme = AppTheme.light(locale);
@@ -81,9 +98,6 @@ class UmmahConnectApp extends ConsumerWidget {
       ),
       data: (_) {
         final router = ref.watch(routerProvider);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          PushService.instance.flushPending();
-        });
         return MaterialApp.router(
           title: 'IIAS',
           debugShowCheckedModeBanner: false,

@@ -333,7 +333,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     final months = _selectableMonths;
     final allocated = _allocatedTotal;
     final isSelfSubmit =
-        ref.watch(authStateProvider)?.role == UserRole.member;
+        ref.watch(authStateProvider)?.isStaff != true;
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
 
