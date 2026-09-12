@@ -182,13 +182,13 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Select Collector',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                          context.l10n.selectCollector,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                         ),
                       ),
                     ),
@@ -196,16 +196,16 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TextField(
                         onChanged: (v) => setModalState(() => query = v),
-                        decoration: const InputDecoration(
-                          hintText: 'Search members',
-                          prefixIcon: Icon(Icons.search),
+                        decoration: InputDecoration(
+                          hintText: context.l10n.searchMembersShort,
+                          prefixIcon: const Icon(Icons.search),
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Expanded(
                       child: filtered.isEmpty
-                          ? const EmptyState(message: 'No members found')
+                          ? EmptyState(message: context.l10n.noMembersFound)
                           : ListView.separated(
                               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                               itemCount: filtered.length,
@@ -259,7 +259,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
 
     if (_selectedKeys.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select at least one month to pay')),
+        SnackBar(content: Text(context.l10n.selectAtLeastOneMonth)),
       );
       return;
     }
@@ -267,8 +267,8 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     if (_method == PaymentMethod.mobileWallet) {
       if (_walletAccountCtrl.text.trim().isEmpty || _txnIdCtrl.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Enter wallet account number and transaction ID'),
+          SnackBar(
+            content: Text(context.l10n.enterWalletAndTxn),
           ),
         );
         return;
@@ -277,7 +277,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
 
     if (_method == PaymentMethod.cashToCollector && _selectedCollector == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select a collector from the members list')),
+        SnackBar(content: Text(context.l10n.selectCollectorFromList)),
       );
       return;
     }
@@ -286,7 +286,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     final amount = _allocatedTotal;
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selected months have no payable amount')),
+        SnackBar(content: Text(context.l10n.noPayableAmount)),
       );
       return;
     }
@@ -313,7 +313,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment failed: $e')),
+        SnackBar(content: Text(context.l10n.paymentFailed(e))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -334,6 +334,8 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     final allocated = _allocatedTotal;
     final isSelfSubmit =
         ref.watch(authStateProvider)?.role == UserRole.member;
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -346,8 +348,8 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
           if (isSelfSubmit) ...[
             SectionCard(
               child: Text(
-                'Your payment will stay pending until an admin accepts it. Only accepted payments count toward dues and collections.',
-                style: TextStyle(color: AppColors.textSecondary, height: 1.4),
+                l10n.paymentPendingSelfHint,
+                style: const TextStyle(color: AppColors.textSecondary, height: 1.4),
               ),
             ),
             const SizedBox(height: 16),
@@ -361,30 +363,30 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                   style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
                 ),
                 Text(
-                  '${member.memberCode} · ৳ ${member.monthlyAmount}/month',
+                  '${member.memberCode} · ${l10n.monthlySlash('${member.monthlyAmount}')}',
                   style: const TextStyle(color: AppColors.textSecondary),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.w600)),
+          Text(l10n.paymentMethod, style: const TextStyle(fontWeight: FontWeight.w600)),
           RadioListTile<PaymentMethod>(
             value: PaymentMethod.mobileWallet,
             groupValue: _method,
-            title: const Text('Mobile Wallet'),
+            title: Text(l10n.mobileWallet),
             onChanged: (v) => setState(() => _method = v!),
           ),
           RadioListTile<PaymentMethod>(
             value: PaymentMethod.cashToCollector,
             groupValue: _method,
-            title: const Text('Cash to collector'),
+            title: Text(l10n.cashToCollector),
             onChanged: (v) => setState(() => _method = v!),
           ),
           RadioListTile<PaymentMethod>(
             value: PaymentMethod.handCash,
             groupValue: _method,
-            title: const Text('Hand Cash'),
+            title: Text(l10n.handCash),
             onChanged: (v) => setState(() => _method = v!),
           ),
           if (_method == PaymentMethod.mobileWallet) ...[
@@ -393,28 +395,28 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Mobile Wallet Details',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.mobileWalletDetails,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _walletAccountCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Wallet Account Number',
+                    decoration: InputDecoration(
+                      labelText: l10n.walletAccountNumber,
                       hintText: '01XXXXXXXXX',
-                      prefixIcon: Icon(Icons.account_balance_wallet_outlined),
+                      prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: _txnIdCtrl,
                     textCapitalization: TextCapitalization.characters,
-                    decoration: const InputDecoration(
-                      labelText: 'Transaction ID',
+                    decoration: InputDecoration(
+                      labelText: l10n.transactionId,
                       hintText: 'e.g. TXN123456789',
-                      prefixIcon: Icon(Icons.tag_rounded),
+                      prefixIcon: const Icon(Icons.tag_rounded),
                     ),
                   ),
                 ],
@@ -427,28 +429,28 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Collector',
-                    style: TextStyle(fontWeight: FontWeight.w800),
+                  Text(
+                    l10n.collector,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Select who received the cash from the members list.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  Text(
+                    l10n.selectCollectorHint,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 12),
                   InkWell(
                     onTap: _pickCollector,
                     borderRadius: BorderRadius.circular(14),
                     child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Collector Member',
-                        prefixIcon: Icon(Icons.badge_outlined),
-                        suffixIcon: Icon(Icons.arrow_drop_down),
+                      decoration: InputDecoration(
+                        labelText: l10n.collectorMember,
+                        prefixIcon: const Icon(Icons.badge_outlined),
+                        suffixIcon: const Icon(Icons.arrow_drop_down),
                       ),
                       child: Text(
                         _selectedCollector == null
-                            ? 'Tap to select collector'
+                            ? l10n.tapToSelectCollector
                             : '${_selectedCollector!.name} (${_selectedCollector!.memberCode})',
                         style: TextStyle(
                           color: _selectedCollector == null
@@ -468,20 +470,20 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Select Months',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                Text(
+                  l10n.selectMonths,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Choose which months to pay. Nothing is selected by default.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                Text(
+                  l10n.selectMonthsHint,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                 ),
                 const SizedBox(height: 12),
                 if (months.isEmpty)
-                  const Text(
-                    'No payable months available',
-                    style: TextStyle(color: AppColors.textSecondary),
+                  Text(
+                    l10n.noPayableMonths,
+                    style: const TextStyle(color: AppColors.textSecondary),
                   )
                 else
                   ...months.map((m) {
@@ -497,7 +499,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              DateFormat('MMMM yyyy').format(m.month),
+                              DateFormat('MMMM yyyy', locale).format(m.month),
                               style: const TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ),
@@ -523,7 +525,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                 const Divider(height: 24),
                 Row(
                   children: [
-                    const Text('Selected months'),
+                    Text(l10n.selectedMonths),
                     const Spacer(),
                     Text(
                       '${_selectedKeys.length}',
@@ -534,7 +536,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Text('Payment amount'),
+                    Text(l10n.paymentAmount),
                     const Spacer(),
                     Text(
                       '৳ $allocated',
@@ -551,7 +553,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
           ),
           const SizedBox(height: 20),
           AppButton(
-            label: isSelfSubmit ? 'Submit for Approval' : 'Confirm Payment',
+            label: isSelfSubmit ? l10n.submitForApproval : l10n.confirmPayment,
             loading: _loading,
             onPressed: _confirm,
           ),

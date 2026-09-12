@@ -56,6 +56,7 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-committee',
         onPressed: () {
           if (_tabs.index == 0) {
             _editMember(context, ref);
@@ -64,7 +65,7 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
           }
         },
         icon: const Icon(Icons.add),
-        label: Text(_tabs.index == 0 ? 'Add Member' : 'Add Role'),
+        label: Text(_tabs.index == 0 ? context.l10n.addMember : context.l10n.addRole),
       ),
       body: TabBarView(
         controller: _tabs,
@@ -101,7 +102,7 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    role == null ? 'New role' : 'Edit role',
+                    role == null ? context.l10n.newRole : context.l10n.editRole,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -109,21 +110,21 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
                   const SizedBox(height: 14),
                   TextField(
                     controller: nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Role name',
+                    decoration: InputDecoration(
+                      labelText: context.l10n.roleName,
                       hintText: 'e.g. Chairman, Secretary',
                     ),
                   ),
                   if (role != null)
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Active'),
+                      title: Text(context.l10n.active),
                       value: isActive,
                       onChanged: (v) => setModal(() => isActive = v),
                     ),
                   const SizedBox(height: 14),
                   AppButton(
-                    label: role == null ? 'Create Role' : 'Save',
+                    label: role == null ? context.l10n.createRole : context.l10n.save,
                     onPressed: () async {
                       if (nameCtrl.text.trim().isEmpty) return;
                       final repo = ref.read(repositoryProvider);
@@ -163,7 +164,7 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
     if (!context.mounted) return;
     if (roles.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Create a committee role first')),
+        SnackBar(content: Text(context.l10n.createRoleFirst)),
       );
       _tabs.animateTo(1);
       return;
@@ -195,7 +196,9 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      member == null ? 'Add committee member' : 'Edit member',
+                      member == null
+                          ? context.l10n.addCommitteeMember
+                          : context.l10n.editCommitteeMember,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
@@ -203,12 +206,12 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
                     const SizedBox(height: 14),
                     TextField(
                       controller: nameCtrl,
-                      decoration: const InputDecoration(labelText: 'Full name'),
+                      decoration: InputDecoration(labelText: context.l10n.fullName),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: roleId,
-                      decoration: const InputDecoration(labelText: 'Role'),
+                      decoration: InputDecoration(labelText: context.l10n.role),
                       items: roles
                           .map(
                             (r) => DropdownMenuItem(
@@ -225,34 +228,34 @@ class _CommitteeScreenState extends ConsumerState<CommitteeScreen>
                     TextField(
                       controller: phoneCtrl,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'Phone'),
+                      decoration: InputDecoration(labelText: context.l10n.phone),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email (optional)',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.emailOptional,
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: notesCtrl,
                       maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Notes (optional)',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.notesOptional,
                       ),
                     ),
                     if (member != null)
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Active'),
+                        title: Text(context.l10n.active),
                         value: isActive,
                         onChanged: (v) => setModal(() => isActive = v),
                       ),
                     const SizedBox(height: 14),
                     AppButton(
-                      label: member == null ? 'Add to Committee' : 'Save',
+                      label: member == null ? context.l10n.addToCommittee : context.l10n.save,
                       onPressed: () async {
                         if (nameCtrl.text.trim().isEmpty) return;
                         final repo = ref.read(repositoryProvider);
@@ -314,7 +317,7 @@ class _MembersTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('$e')),
       data: (members) {
         if (members.isEmpty) {
-          return const EmptyState(message: 'No committee members yet');
+          return EmptyState(message: context.l10n.noCommitteeMembers);
         }
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(committeeMembersProvider),
@@ -409,7 +412,7 @@ class _RolesTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('$e')),
       data: (roles) {
         if (roles.isEmpty) {
-          return const EmptyState(message: 'No roles yet');
+          return EmptyState(message: context.l10n.noRolesYet);
         }
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(committeeRolesProvider),
@@ -435,7 +438,7 @@ class _RolesTab extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            role.isActive ? 'Active' : 'Inactive',
+                            role.isActive ? context.l10n.active : context.l10n.inactive,
                             style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 12,

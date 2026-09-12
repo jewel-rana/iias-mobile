@@ -16,8 +16,10 @@ class DonationSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
     return Scaffold(
-      appBar: IiasAppBar(title: context.l10n.donationReceived),
+      appBar: IiasAppBar(title: l10n.donationReceived),
       body: SafeArea(
         top: false,
         child: LayoutBuilder(
@@ -43,7 +45,7 @@ class DonationSuccessScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Donation Received',
+                      l10n.donationReceived,
                       style: Theme.of(context)
                           .textTheme
                           .headlineSmall
@@ -62,26 +64,26 @@ class DonationSuccessScreen extends StatelessWidget {
                     SectionCard(
                       child: Column(
                         children: [
-                          _row('Receipt', donation.receiptNumber),
-                          _row('Donor', donation.donorName),
+                          _row(l10n.receipt, donation.receiptNumber),
+                          _row(l10n.donor, donation.donorName),
                           _row(
-                            'Type',
+                            l10n.type,
                             donation.donorType == DonorType.member
-                                ? 'Member'
-                                : 'Non-member',
+                                ? l10n.member
+                                : l10n.nonMember,
                           ),
                           if (donation.referredByName != null)
-                            _row('Referred by', donation.referredByName!),
+                            _row(l10n.referredBy, donation.referredByName!),
                           _row(
-                            'Date',
-                            DateFormat('dd MMM yyyy').format(donation.date),
+                            l10n.date,
+                            DateFormat('dd MMM yyyy', locale).format(donation.date),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 24),
                     AppButton(
-                      label: 'Share WhatsApp',
+                      label: l10n.shareWhatsApp,
                       outlined: true,
                       onPressed: () async {
                         final opened = await shareViaWhatsApp(
@@ -90,10 +92,8 @@ class DonationSuccessScreen extends StatelessWidget {
                         if (!context.mounted) return;
                         if (!opened) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'WhatsApp is not available. Receipt copied.',
-                              ),
+                            SnackBar(
+                              content: Text(l10n.whatsappUnavailable),
                             ),
                           );
                         }
@@ -101,7 +101,7 @@ class DonationSuccessScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     AppButton(
-                      label: 'View Receipt',
+                      label: l10n.viewReceipt,
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -113,7 +113,7 @@ class DonationSuccessScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     AppButton(
-                      label: 'Back to Funds',
+                      label: l10n.backToFunds,
                       onPressed: () => context.go('/events'),
                     ),
                   ],

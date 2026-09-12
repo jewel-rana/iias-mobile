@@ -24,7 +24,8 @@ class JoinRequestsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(joinFilterProvider);
     final async = ref.watch(joinRequestsProvider);
-    final dateFmt = DateFormat('dd MMM yyyy · hh:mm a');
+    final l10n = context.l10n;
+    final dateFmt = DateFormat('dd MMM yyyy · hh:mm a', Localizations.localeOf(context).toString());
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -37,24 +38,24 @@ class JoinRequestsScreen extends ConsumerWidget {
             child: Row(
               children: [
                 _Pill(
-                  label: 'All',
+                  label: l10n.all,
                   selected: filter == null,
                   onTap: () => ref.read(joinFilterProvider.notifier).state = null,
                 ),
                 _Pill(
-                  label: 'Pending',
+                  label: l10n.pending,
                   selected: filter == JoinRequestStatus.submitted,
                   onTap: () => ref.read(joinFilterProvider.notifier).state =
                       JoinRequestStatus.submitted,
                 ),
                 _Pill(
-                  label: 'Approved',
+                  label: l10n.approved,
                   selected: filter == JoinRequestStatus.approved,
                   onTap: () => ref.read(joinFilterProvider.notifier).state =
                       JoinRequestStatus.approved,
                 ),
                 _Pill(
-                  label: 'Rejected',
+                  label: l10n.rejected,
                   selected: filter == JoinRequestStatus.rejected,
                   onTap: () => ref.read(joinFilterProvider.notifier).state =
                       JoinRequestStatus.rejected,
@@ -68,7 +69,7 @@ class JoinRequestsScreen extends ConsumerWidget {
               error: (e, _) => Center(child: Text('$e')),
               data: (requests) {
                 if (requests.isEmpty) {
-                  return const EmptyState(message: 'No join requests');
+                  return EmptyState(message: l10n.noJoinRequests);
                 }
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(joinRequestsProvider),
@@ -123,21 +124,21 @@ class JoinRequestsScreen extends ConsumerWidget {
                             if (req.referralCode != null) ...[
                               const SizedBox(height: 4),
                               Text(
-                                'Referral: ${req.referralCode}',
+                                l10n.referralCodeLabel(req.referralCode!),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
                             if (req.preferredMonthlyAmount != null) ...[
                               const SizedBox(height: 4),
                               Text(
-                                'Preferred monthly: ৳ ${req.preferredMonthlyAmount}',
+                                l10n.preferredMonthly('${req.preferredMonthlyAmount}'),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
                             if (req.rejectionReason != null) ...[
                               const SizedBox(height: 8),
                               Text(
-                                'Reason: ${req.rejectionReason}',
+                                l10n.reasonLabel(req.rejectionReason!),
                                 style: const TextStyle(
                                   color: AppColors.unpaid,
                                   fontSize: 13,
@@ -152,7 +153,7 @@ class JoinRequestsScreen extends ConsumerWidget {
                                     child: OutlinedButton(
                                       onPressed: () =>
                                           _reject(context, ref, req),
-                                      child: const Text('Reject'),
+                                      child: Text(l10n.reject),
                                     ),
                                   ),
                                   const SizedBox(width: 10),
@@ -160,7 +161,7 @@ class JoinRequestsScreen extends ConsumerWidget {
                                     child: ElevatedButton(
                                       onPressed: () =>
                                           _approve(context, ref, req),
-                                      child: const Text('Approve'),
+                                      child: Text(l10n.approve),
                                     ),
                                   ),
                                 ],
@@ -188,18 +189,18 @@ class JoinRequestsScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Approve member?'),
+        title: Text(context.l10n.approveMember),
         content: Text(
-          'Create a member account for ${req.fullName} (${req.phone})?',
+          context.l10n.approveMemberHint(req.fullName, req.phone),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Approve'),
+            child: Text(context.l10n.approve),
           ),
         ],
       ),
@@ -212,13 +213,13 @@ class JoinRequestsScreen extends ConsumerWidget {
       ref.invalidate(dashboardProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${req.fullName} approved')),
+          SnackBar(content: Text(context.l10n.receiptApproved(req.fullName))),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Approve failed: $e')),
+          SnackBar(content: Text(context.l10n.approveFailed(e))),
         );
       }
     }
@@ -233,22 +234,22 @@ class JoinRequestsScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject request'),
+        title: Text(context.l10n.rejectRequestTitle),
         content: TextField(
           controller: reasonCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Reason (optional)',
+          decoration: InputDecoration(
+            labelText: context.l10n.reasonOptional,
           ),
           maxLines: 2,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reject'),
+            child: Text(context.l10n.reject),
           ),
         ],
       ),
@@ -262,13 +263,13 @@ class JoinRequestsScreen extends ConsumerWidget {
       ref.invalidate(joinRequestsProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Request rejected')),
+          SnackBar(content: Text(context.l10n.requestRejected)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Reject failed: $e')),
+          SnackBar(content: Text(context.l10n.rejectFailed(e))),
         );
       }
     } finally {
@@ -283,10 +284,11 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final (label, color) = switch (status) {
-      JoinRequestStatus.submitted => ('Pending', AppColors.partial),
-      JoinRequestStatus.approved => ('Approved', AppColors.paid),
-      JoinRequestStatus.rejected => ('Rejected', AppColors.unpaid),
+      JoinRequestStatus.submitted => (l10n.pending, AppColors.partial),
+      JoinRequestStatus.approved => (l10n.approved, AppColors.paid),
+      JoinRequestStatus.rejected => (l10n.rejected, AppColors.unpaid),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

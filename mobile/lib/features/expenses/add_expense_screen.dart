@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 import '../dashboard/dashboard_screen.dart';
 import 'expenses_screen.dart';
 
@@ -153,7 +154,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_head == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select an expense head')),
+        SnackBar(content: Text(context.l10n.selectExpenseHead)),
       );
       return;
     }
@@ -161,7 +162,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Salary for ${DateFormat('MMMM yyyy').format(_salaryPeriod)} is already paid',
+            context.l10n.salaryAlreadyPaid(
+              DateFormat('MMMM yyyy', Localizations.localeOf(context).toString())
+                  .format(_salaryPeriod),
+            ),
           ),
         ),
       );
@@ -184,13 +188,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       ref.invalidate(salaryDuesProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Expense recorded')),
+        SnackBar(content: Text(context.l10n.expenseRecorded)),
       );
       context.go('/expenses');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e')),
+        SnackBar(content: Text(context.l10n.couldNotSave(e))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -199,12 +203,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFmt = DateFormat('dd MMM yyyy');
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final dateFmt = DateFormat('dd MMM yyyy', locale);
     final headsAsync = ref.watch(expenseHeadsProvider(widget.initialKind));
     final title = switch (widget.initialKind) {
-      ExpenseHeadKind.salary => 'Pay Salary',
-      ExpenseHeadKind.festivalBonus => 'Festival Bonus',
-      _ => 'Add Expense',
+      ExpenseHeadKind.salary => l10n.paySalary,
+      ExpenseHeadKind.festivalBonus => l10n.festivalBonus,
+      _ => l10n.addExpense,
     };
 
     return Scaffold(
@@ -218,7 +224,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         actions: [
           TextButton(
             onPressed: () => context.push('/expense-heads'),
-            child: const Text('Heads'),
+            child: Text(l10n.heads),
           ),
         ],
       ),
@@ -233,14 +239,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'No expense heads yet. Create Salary or Festival Bonus heads first.',
+                    Text(
+                      l10n.noExpenseHeadsHint,
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 16),
                     AppButton(
-                      label: 'Manage Heads',
+                      label: l10n.manageHeads,
                       onPressed: () => context.push('/expense-heads'),
                     ),
                   ],
@@ -265,15 +271,15 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Expense details',
+                        l10n.expenseDetails,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Pick a head (Salary, Festival Bonus, etc.), then enter amount.',
-                        style: TextStyle(
+                      Text(
+                        l10n.expenseDetailsHint,
+                        style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
                         ),
@@ -285,15 +291,15 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                               (h) => h?.id == _head?.id,
                               orElse: () => heads.first,
                             ),
-                        decoration: const InputDecoration(
-                          labelText: 'Expense head',
+                        decoration: InputDecoration(
+                          labelText: l10n.expenseHead,
                         ),
                         selectedItemBuilder: (context) => heads
                             .map(
                               (h) => Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
-                                  '${h.name} (${h.kind.label})',
+                                  '${h.name} (${l10n.expenseKindLabel(h.kind)})',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -304,7 +310,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                             .map(
                               (h) => DropdownMenuItem(
                                 value: h,
-                                child: Text('${h.name} (${h.kind.label})'),
+                                child: Text('${h.name} (${l10n.expenseKindLabel(h.kind)})'),
                               ),
                             )
                             .toList(),
@@ -315,7 +321,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       if (_isSalary) ...[
                         const SizedBox(height: 14),
                         Text(
-                          'Salary month',
+                          l10n.salaryMonth,
                           style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
@@ -328,15 +334,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                               child: DropdownButtonFormField<int>(
                                 isExpanded: true,
                                 value: _periodMonth,
-                                decoration: const InputDecoration(
-                                  labelText: 'Month',
+                                decoration: InputDecoration(
+                                  labelText: l10n.month,
                                 ),
                                 items: List.generate(12, (i) {
                                   final month = i + 1;
                                   return DropdownMenuItem(
                                     value: month,
                                     child: Text(
-                                      DateFormat('MMMM').format(DateTime(2026, month)),
+                                      DateFormat('MMMM', locale)
+                                          .format(DateTime(2026, month)),
                                     ),
                                   );
                                 }),
@@ -351,8 +358,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                               child: DropdownButtonFormField<int>(
                                 isExpanded: true,
                                 value: _periodYear,
-                                decoration: const InputDecoration(
-                                  labelText: 'Year',
+                                decoration: InputDecoration(
+                                  labelText: l10n.year,
                                 ),
                                 items: [
                                   for (var y = DateTime.now().year - 4;
@@ -373,7 +380,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         if (_dueCount > 0) ...[
                           const SizedBox(height: 10),
                           Text(
-                            '$_dueCount unpaid salary month${_dueCount == 1 ? '' : 's'} marked due',
+                            l10n.unpaidSalaryMonths(_dueCount),
                             style: const TextStyle(
                               color: AppColors.unpaid,
                               fontWeight: FontWeight.w700,
@@ -392,7 +399,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                               return ChoiceChip(
                                 selected: selected,
                                 label: Text(
-                                  '${DateFormat('MMM yyyy').format(p.month)} · ${p.isPaid ? 'Paid' : 'Due'}',
+                                  '${DateFormat('MMM yyyy', locale).format(p.month)} · ${p.isPaid ? l10n.paid : l10n.due}',
                                 ),
                                 selectedColor: p.isPaid
                                     ? AppColors.paid.withValues(alpha: 0.18)
@@ -411,9 +418,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         ],
                         if (_selectedSalaryPaid) ...[
                           const SizedBox(height: 8),
-                          const Text(
-                            'This month is already paid. Pick a due month.',
-                            style: TextStyle(color: AppColors.unpaid, fontSize: 13),
+                          Text(
+                            l10n.thisMonthAlreadyPaid,
+                            style: const TextStyle(color: AppColors.unpaid, fontSize: 13),
                           ),
                         ],
                       ],
@@ -421,30 +428,30 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       TextFormField(
                         controller: _title,
                         onChanged: (_) => _titleTouched = true,
-                        decoration: const InputDecoration(
-                          labelText: 'Title',
-                          hintText: "e.g. Imam's Salary — September",
+                        decoration: InputDecoration(
+                          labelText: l10n.title,
+                          hintText: l10n.expenseTitleHint,
                         ),
                         validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Required' : null,
+                            (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
                       ),
                       const SizedBox(height: 14),
                       TextFormField(
                         controller: _amount,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Amount (৳)',
+                        decoration: InputDecoration(
+                          labelText: l10n.amountTaka,
                           prefixText: '৳ ',
                         ),
                         validator: (v) {
                           final n = int.tryParse(v?.trim() ?? '');
-                          if (n == null || n < 1) return 'Enter a valid amount';
+                          if (n == null || n < 1) return l10n.enterValidAmount;
                           return null;
                         },
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        'Type',
+                        l10n.type,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                             ),
@@ -454,8 +461,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         children: [
                           Expanded(
                             child: _TypeTile(
-                              label: 'Monthly',
-                              subtitle: 'Recurring',
+                              label: l10n.monthly,
+                              subtitle: l10n.recurring,
                               selected: _recurrence == ExpenseRecurrence.monthly,
                               onTap: () => setState(
                                 () => _recurrence = ExpenseRecurrence.monthly,
@@ -465,8 +472,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: _TypeTile(
-                              label: 'Occasional',
-                              subtitle: 'One-time',
+                              label: l10n.occasional,
+                              subtitle: l10n.oneTime,
                               selected:
                                   _recurrence == ExpenseRecurrence.occasional,
                               onTap: () => setState(
@@ -480,7 +487,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       const SizedBox(height: 14),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text(_isSalary ? 'Paid on' : 'Expense date'),
+                        title: Text(_isSalary ? l10n.paidOn : l10n.expenseDate),
                         subtitle: Text(dateFmt.format(_date)),
                         trailing: const Icon(Icons.calendar_today_rounded),
                         onTap: _pickDate,
@@ -488,19 +495,19 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       const SizedBox(height: 8),
                       DropdownButtonFormField<PaymentMethod?>(
                         value: _method,
-                        decoration: const InputDecoration(labelText: 'Paid via'),
-                        items: const [
+                        decoration: InputDecoration(labelText: l10n.paidVia),
+                        items: [
                           DropdownMenuItem(
                             value: PaymentMethod.cashToCollector,
-                            child: Text('Cash'),
+                            child: Text(l10n.cash),
                           ),
                           DropdownMenuItem(
                             value: PaymentMethod.mobileWallet,
-                            child: Text('Mobile Wallet'),
+                            child: Text(l10n.mobileWallet),
                           ),
                           DropdownMenuItem(
                             value: PaymentMethod.handCash,
-                            child: Text('Hand Cash'),
+                            child: Text(l10n.handCash),
                           ),
                         ],
                         onChanged: (v) => setState(() => _method = v),
@@ -509,8 +516,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                       TextFormField(
                         controller: _notes,
                         maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes (optional)',
+                        decoration: InputDecoration(
+                          labelText: l10n.notesOptional,
                         ),
                       ),
                     ],
@@ -518,7 +525,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 ),
                 const SizedBox(height: 20),
                 AppButton(
-                  label: _isSalary ? 'Pay Salary' : 'Save Expense',
+                  label: _isSalary ? l10n.paySalary : l10n.saveExpense,
                   loading: _loading,
                   onPressed: _selectedSalaryPaid ? null : _save,
                 ),

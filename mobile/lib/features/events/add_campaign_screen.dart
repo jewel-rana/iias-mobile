@@ -70,13 +70,13 @@ class _AddCampaignScreenState extends ConsumerState<AddCampaignScreen> {
       ref.invalidate(activeEventsProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Campaign created')),
+        SnackBar(content: Text(context.l10n.campaignCreated)),
       );
       context.go('/events');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not create campaign: $e')),
+        SnackBar(content: Text(context.l10n.couldNotCreateCampaign(e))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -85,7 +85,8 @@ class _AddCampaignScreenState extends ConsumerState<AddCampaignScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFmt = DateFormat('dd MMM yyyy');
+    final l10n = context.l10n;
+    final dateFmt = DateFormat('dd MMM yyyy', Localizations.localeOf(context).toString());
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -106,37 +107,37 @@ class _AddCampaignScreenState extends ConsumerState<AddCampaignScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Fundraising campaign',
+                    l10n.fundraisingCampaign,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Create a new campaign to collect donations from members and non-members.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  Text(
+                    l10n.fundraisingCampaignHint,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 18),
                   TextFormField(
                     controller: _title,
-                    decoration: const InputDecoration(
-                      labelText: 'Campaign title',
-                      hintText: 'e.g. Winter Relief Drive',
+                    decoration: InputDecoration(
+                      labelText: l10n.campaignTitle,
+                      hintText: l10n.campaignTitleHint,
                     ),
                     validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Required' : null,
+                        (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _goal,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Goal amount',
+                    decoration: InputDecoration(
+                      labelText: l10n.goalAmount,
                       prefixText: '৳ ',
                     ),
                     validator: (v) {
                       final n = int.tryParse(v?.trim() ?? '');
-                      if (n == null || n < 1) return 'Enter a valid goal';
+                      if (n == null || n < 1) return l10n.enterValidGoal;
                       return null;
                     },
                   ),
@@ -144,30 +145,30 @@ class _AddCampaignScreenState extends ConsumerState<AddCampaignScreen> {
                   TextFormField(
                     controller: _description,
                     maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Description (optional)',
+                    decoration: InputDecoration(
+                      labelText: l10n.descriptionOptional,
                     ),
                   ),
                   const SizedBox(height: 8),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Start date'),
+                    title: Text(l10n.startDate),
                     subtitle: Text(dateFmt.format(_startsAt)),
                     trailing: const Icon(Icons.calendar_today_rounded),
                     onTap: _pickStart,
                   ),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('End date (optional)'),
+                    title: Text(l10n.endDateOptional),
                     subtitle: Text(
-                      _endsAt == null ? 'Not set' : dateFmt.format(_endsAt!),
+                      _endsAt == null ? l10n.notSet : dateFmt.format(_endsAt!),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (_endsAt != null)
                           IconButton(
-                            tooltip: 'Clear',
+                            tooltip: l10n.clear,
                             onPressed: () => setState(() => _endsAt = null),
                             icon: const Icon(Icons.clear),
                           ),
@@ -181,7 +182,7 @@ class _AddCampaignScreenState extends ConsumerState<AddCampaignScreen> {
             ),
             const SizedBox(height: 20),
             AppButton(
-              label: 'Create Campaign',
+              label: l10n.createCampaign,
               loading: _loading,
               onPressed: _save,
             ),

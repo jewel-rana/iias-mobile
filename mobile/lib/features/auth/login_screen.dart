@@ -64,17 +64,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
       child: Scaffold(
-        body: Column(
-          children: [
-            const _LoginTopBar(),
-            Expanded(
-              child: AuthBackground(
-                showCenterGlow: true,
-                showBottomSkyline: true,
+        body: AuthBackground(
+          showCenterGlow: true,
+          showBottomSkyline: true,
+          child: Column(
+            children: [
+              const _LoginTopBar(),
+              Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                   child: Column(
                     children: [
                       Align(
@@ -202,8 +206,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -215,19 +219,16 @@ class _LoginTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.black,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Center(
-            child: Image.asset(
-              BrandMark.assetPath,
-              height: 120,
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
-            ),
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+        child: Center(
+          child: Image.asset(
+            BrandMark.assetPath,
+            height: 120,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
           ),
         ),
       ),

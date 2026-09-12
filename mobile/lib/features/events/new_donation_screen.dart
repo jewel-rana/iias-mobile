@@ -58,7 +58,7 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
     final amount = int.tryParse(_amount.text) ?? 0;
     if (_eventId == null || amount <= 0 || _name.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill donor name, event and amount')),
+        SnackBar(content: Text(context.l10n.fillDonationFields)),
       );
       return;
     }
@@ -79,8 +79,9 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: IiasAppBar(title: context.l10n.newDonation),
+      appBar: IiasAppBar(title: l10n.newDonation),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -89,7 +90,7 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
               children: [
                 Expanded(
                   child: ChoiceChip(
-                    label: const Center(child: Text('Member')),
+                    label: Center(child: Text(l10n.member)),
                     selected: _donorType == DonorType.member,
                     onSelected: (_) => setState(() => _donorType = DonorType.member),
                   ),
@@ -97,7 +98,7 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: ChoiceChip(
-                    label: const Center(child: Text('Non-member')),
+                    label: Center(child: Text(l10n.nonMember)),
                     selected: _donorType == DonorType.nonMember,
                     onSelected: (_) => setState(() => _donorType = DonorType.nonMember),
                   ),
@@ -106,17 +107,17 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          TextField(controller: _name, decoration: const InputDecoration(labelText: 'Donor Name')),
+          TextField(controller: _name, decoration: InputDecoration(labelText: l10n.donorName)),
           const SizedBox(height: 12),
           TextField(
             controller: _phone,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(labelText: 'Phone'),
+            decoration: InputDecoration(labelText: l10n.phone),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _eventId,
-            decoration: const InputDecoration(labelText: 'Fundraising Event'),
+            decoration: InputDecoration(labelText: l10n.fundraisingEvent),
             items: _events
                 .map((e) => DropdownMenuItem(value: e.id, child: Text(e.title)))
                 .toList(),
@@ -126,9 +127,9 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: _referrerId,
-              decoration: const InputDecoration(labelText: 'Referring Member (Optional)'),
+              decoration: InputDecoration(labelText: l10n.referringMember),
               items: [
-                const DropdownMenuItem(value: null, child: Text('None')),
+                DropdownMenuItem(value: null, child: Text(l10n.none)),
                 ..._members.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name))),
               ],
               onChanged: (v) => setState(() => _referrerId = v),
@@ -138,30 +139,30 @@ class _NewDonationScreenState extends ConsumerState<NewDonationScreen> {
           TextField(
             controller: _amount,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Amount', prefixText: '৳  '),
+            decoration: InputDecoration(labelText: l10n.amount, prefixText: '৳  '),
           ),
           const SizedBox(height: 12),
-          const Text('Payment Method', style: TextStyle(fontWeight: FontWeight.w600)),
+          Text(l10n.paymentMethod, style: const TextStyle(fontWeight: FontWeight.w600)),
           RadioListTile<PaymentMethod>(
             value: PaymentMethod.mobileWallet,
             groupValue: _method,
-            title: const Text('Mobile Wallet'),
+            title: Text(l10n.mobileWallet),
             onChanged: (v) => setState(() => _method = v!),
           ),
           RadioListTile<PaymentMethod>(
             value: PaymentMethod.cashToCollector,
             groupValue: _method,
-            title: const Text('Cash to collector'),
+            title: Text(l10n.cashToCollector),
             onChanged: (v) => setState(() => _method = v!),
           ),
           RadioListTile<PaymentMethod>(
             value: PaymentMethod.handCash,
             groupValue: _method,
-            title: const Text('Hand Cash'),
+            title: Text(l10n.handCash),
             onChanged: (v) => setState(() => _method = v!),
           ),
           const SizedBox(height: 16),
-          AppButton(label: 'Confirm Donation', loading: _loading, onPressed: _submit),
+          AppButton(label: l10n.confirmDonation, loading: _loading, onPressed: _submit),
         ],
       ),
     );

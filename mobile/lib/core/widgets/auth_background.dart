@@ -98,35 +98,19 @@ class AuthBackground extends StatelessWidget {
 }
 
 class BrandMark extends StatelessWidget {
-  const BrandMark({super.key, this.height = 160, this.radius = 20});
+  const BrandMark({super.key, this.height = 160, double radius = 20});
 
   static const assetPath = 'assets/images/logo_iias.png';
 
   final double height;
-  final double radius;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: Image.asset(
-          assetPath,
-          height: height,
-          fit: BoxFit.contain,
-          filterQuality: FilterQuality.high,
-        ),
-      ),
+    return Image.asset(
+      assetPath,
+      height: height,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
     );
   }
 }

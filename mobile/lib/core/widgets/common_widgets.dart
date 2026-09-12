@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../theme/app_colors.dart';
 import 'auth_background.dart';
 
@@ -33,15 +34,12 @@ class IiasAppBar extends StatelessWidget implements PreferredSizeWidget {
       titleSpacing: 8,
       title: Row(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              BrandMark.assetPath,
-              height: 36,
-              width: 36,
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
-            ),
+          Image.asset(
+            BrandMark.assetPath,
+            height: 36,
+            width: 36,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -126,6 +124,17 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = switch (label) {
+      'Paid' => l10n.paid,
+      'Partial' => l10n.partial,
+      'Unpaid' => l10n.unpaid,
+      'Advance' => l10n.advance,
+      'Pending' => l10n.pending,
+      'Rejected' => l10n.rejected,
+      'Confirmed' => l10n.confirmed,
+      _ => label,
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -133,7 +142,7 @@ class StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
+        text,
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.w700,

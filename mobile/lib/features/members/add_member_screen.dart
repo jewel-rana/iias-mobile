@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../core/navigation/back_fallback.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/money.dart';
-import '../../core/utils/receipt_share.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
@@ -120,13 +119,13 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Member added. Record payment for due months.')),
+        SnackBar(content: Text(context.l10n.memberAdded)),
       );
       context.go('/collect/${member.id}');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not add member: $e')),
+        SnackBar(content: Text(context.l10n.couldNotAddMember(e))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -135,8 +134,10 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateFmt = DateFormat('dd MMM yyyy');
-    final monthFmt = DateFormat('MMM yyyy');
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final dateFmt = DateFormat('dd MMM yyyy', locale);
+    final monthFmt = DateFormat('MMM yyyy', locale);
     final start = DateTime(_joinedAt.year, _joinedAt.month);
     final now = DateTime(DateTime.now().year, DateTime.now().month);
 
@@ -159,52 +160,52 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'New member details',
+                    l10n.newMemberDetails,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Joining date creates unpaid dues from that month through today.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  Text(
+                    l10n.joiningDateCreatesDues,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 18),
                   TextFormField(
                     controller: _name,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Full Name',
+                    decoration: InputDecoration(
+                      labelText: l10n.fullName,
                       hintText: 'Abdul Karim',
                     ),
                     validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+                        (v == null || v.trim().isEmpty) ? l10n.nameRequired : null,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _phone,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Phone Number',
+                    decoration: InputDecoration(
+                      labelText: l10n.phoneNumber,
                       hintText: '01XXXXXXXXX',
                       prefixText: '+880  ',
                     ),
                     validator: (v) =>
-                        (v == null || v.trim().length < 10) ? 'Enter a valid phone' : null,
+                        (v == null || v.trim().length < 10) ? l10n.enterValidPhone : null,
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _email,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email (optional)',
+                    decoration: InputDecoration(
+                      labelText: l10n.emailOptional,
                       hintText: 'name@example.com',
                     ),
                     validator: (v) {
                       final value = v?.trim() ?? '';
                       if (value.isEmpty) return null;
                       if (!value.contains('@') || !value.contains('.')) {
-                        return 'Enter a valid email';
+                        return l10n.enterValidEmail;
                       }
                       return null;
                     },
@@ -212,9 +213,9 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
                   const SizedBox(height: 14),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('Joining date'),
+                    title: Text(l10n.joiningDate),
                     subtitle: Text(
-                      '${dateFmt.format(_joinedAt)} · $_dueMonthCount month${_dueMonthCount == 1 ? '' : 's'} due (${monthFmt.format(start)} – ${monthFmt.format(now)})',
+                      '${dateFmt.format(_joinedAt)} · ${l10n.joiningDateRange(_dueMonthCount, monthFmt.format(start), monthFmt.format(now))}',
                     ),
                     trailing: const Icon(Icons.calendar_today_rounded),
                     onTap: _pickJoinedAt,
@@ -224,21 +225,21 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
                     controller: _amount,
                     keyboardType: TextInputType.number,
                     onChanged: (_) => setState(_syncOpeningAmount),
-                    decoration: const InputDecoration(
-                      labelText: 'Monthly Donation',
+                    decoration: InputDecoration(
+                      labelText: l10n.monthlyDonation,
                       prefixText: '৳  ',
                     ),
                     validator: (v) {
                       final n = int.tryParse(v ?? '');
-                      if (n == null || n <= 0) return 'Enter a valid amount';
+                      if (n == null || n <= 0) return l10n.enterValidAmount;
                       return null;
                     },
                   ),
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _collector,
-                    decoration: const InputDecoration(
-                      labelText: 'Assigned Collector (optional)',
+                    decoration: InputDecoration(
+                      labelText: l10n.assignedCollectorOptional,
                       hintText: 'Rahim Ahmed',
                     ),
                   ),
@@ -252,14 +253,17 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
                 children: [
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text(
-                      'Record payment for previous months',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                    title: Text(
+                      l10n.recordPreviousMonths,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     subtitle: Text(
                       _monthlyAmount > 0
-                          ? 'Outstanding ${formatTaka(_suggestedOpening)} for $_dueMonthCount month${_dueMonthCount == 1 ? '' : 's'}'
-                          : 'Enter monthly amount first',
+                          ? l10n.outstandingForMonths(
+                              formatTaka(_suggestedOpening),
+                              _dueMonthCount,
+                            )
+                          : l10n.enterMonthlyAmountFirst,
                     ),
                     value: _recordOpening,
                     onChanged: (v) {
@@ -274,14 +278,14 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
                     TextFormField(
                       controller: _openingAmount,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Payment amount',
+                      decoration: InputDecoration(
+                        labelText: l10n.paymentAmount,
                         prefixText: '৳  ',
                       ),
                       validator: (v) {
                         if (!_recordOpening) return null;
                         final n = int.tryParse(v?.trim() ?? '');
-                        if (n == null || n < 1) return 'Enter a valid amount';
+                        if (n == null || n < 1) return l10n.enterValidAmount;
                         return null;
                       },
                     ),
@@ -289,12 +293,12 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
                     DropdownButtonFormField<PaymentMethod>(
                       isExpanded: true,
                       value: _openingMethod,
-                      decoration: const InputDecoration(labelText: 'Paid via'),
+                      decoration: InputDecoration(labelText: l10n.paidVia),
                       items: PaymentMethod.values
                           .map(
                             (m) => DropdownMenuItem(
                               value: m,
-                              child: Text(paymentMethodLabel(m)),
+                              child: Text(l10n.paymentMethodName(m)),
                             ),
                           )
                           .toList(),
@@ -308,13 +312,13 @@ class _AddMemberScreenState extends ConsumerState<AddMemberScreen> {
             ),
             const SizedBox(height: 24),
             AppButton(
-              label: _recordOpening ? 'Save & Record Payment' : 'Save Member',
+              label: _recordOpening ? l10n.saveAndRecordPayment : l10n.saveMember,
               loading: _loading,
               onPressed: _save,
             ),
             const SizedBox(height: 10),
             AppButton(
-              label: 'Cancel',
+              label: l10n.cancel,
               outlined: true,
               onPressed: () => popOrGo(context, '/members'),
             ),

@@ -20,11 +20,8 @@ final paymentApprovalsProvider = FutureProvider((ref) {
 class PaymentApprovalsScreen extends ConsumerWidget {
   const PaymentApprovalsScreen({super.key});
 
-  String _methodLabel(PaymentMethod m) => switch (m) {
-        PaymentMethod.mobileWallet => 'Mobile Wallet',
-        PaymentMethod.cashToCollector => 'Cash to collector',
-        PaymentMethod.handCash => 'Hand Cash',
-      };
+  String _methodLabel(PaymentMethod m, AppLocalizations l10n) =>
+      l10n.paymentMethodName(m);
 
   Widget _badge(PaymentStatus status) => switch (status) {
         PaymentStatus.pending => const StatusBadge.pending(),
@@ -39,13 +36,13 @@ class PaymentApprovalsScreen extends ConsumerWidget {
       ref.invalidate(dashboardProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${p.receiptNumber} approved')),
+          SnackBar(content: Text(context.l10n.receiptApproved(p.receiptNumber))),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Approve failed: $e')),
+          SnackBar(content: Text(context.l10n.approveFailed(e))),
         );
       }
     }
@@ -56,20 +53,20 @@ class PaymentApprovalsScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reject payment'),
+        title: Text(context.l10n.rejectPayment),
         content: TextField(
           controller: reasonCtrl,
-          decoration: const InputDecoration(
-            labelText: 'Reason (optional)',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: context.l10n.reasonOptional,
+            border: const OutlineInputBorder(),
           ),
           maxLines: 2,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.cancel)),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Reject'),
+            child: Text(context.l10n.reject),
           ),
         ],
       ),
@@ -84,13 +81,13 @@ class PaymentApprovalsScreen extends ConsumerWidget {
       ref.invalidate(dashboardProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${p.receiptNumber} rejected')),
+          SnackBar(content: Text(context.l10n.receiptRejected(p.receiptNumber))),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Reject failed: $e')),
+          SnackBar(content: Text(context.l10n.rejectFailed(e))),
         );
       }
     }
@@ -100,7 +97,8 @@ class PaymentApprovalsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(paymentApprovalFilterProvider);
     final async = ref.watch(paymentApprovalsProvider);
-    final dateFmt = DateFormat('dd MMM yyyy · hh:mm a');
+    final l10n = context.l10n;
+    final dateFmt = DateFormat('dd MMM yyyy · hh:mm a', Localizations.localeOf(context).toString());
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -113,25 +111,25 @@ class PaymentApprovalsScreen extends ConsumerWidget {
             child: Row(
               children: [
                 _Pill(
-                  label: 'Pending',
+                  label: l10n.pending,
                   selected: filter == PaymentStatus.pending,
                   onTap: () => ref.read(paymentApprovalFilterProvider.notifier).state =
                       PaymentStatus.pending,
                 ),
                 _Pill(
-                  label: 'Confirmed',
+                  label: l10n.confirmed,
                   selected: filter == PaymentStatus.confirmed,
                   onTap: () => ref.read(paymentApprovalFilterProvider.notifier).state =
                       PaymentStatus.confirmed,
                 ),
                 _Pill(
-                  label: 'Rejected',
+                  label: l10n.rejected,
                   selected: filter == PaymentStatus.rejected,
                   onTap: () => ref.read(paymentApprovalFilterProvider.notifier).state =
                       PaymentStatus.rejected,
                 ),
                 _Pill(
-                  label: 'All',
+                  label: l10n.all,
                   selected: filter == null,
                   onTap: () =>
                       ref.read(paymentApprovalFilterProvider.notifier).state = null,
@@ -145,7 +143,7 @@ class PaymentApprovalsScreen extends ConsumerWidget {
               error: (e, _) => Center(child: Text('$e')),
               data: (payments) {
                 if (payments.isEmpty) {
-                  return const EmptyState(message: 'No payments in this filter');
+                  return EmptyState(message: l10n.noPaymentsFilter);
                 }
                 return RefreshIndicator(
                   onRefresh: () async => ref.invalidate(paymentApprovalsProvider),
@@ -176,7 +174,7 @@ class PaymentApprovalsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '${p.receiptNumber} · ${_methodLabel(p.method)}',
+                              '${p.receiptNumber} · ${_methodLabel(p.method, l10n)}',
                               style: const TextStyle(color: AppColors.textSecondary),
                             ),
                             const SizedBox(height: 4),
@@ -191,20 +189,20 @@ class PaymentApprovalsScreen extends ConsumerWidget {
                             MoneyText(p.amount),
                             if (p.walletAccount != null && p.walletAccount!.isNotEmpty) ...[
                               const SizedBox(height: 4),
-                              Text('Wallet: ${p.walletAccount}', style: const TextStyle(fontSize: 12)),
+                              Text(l10n.walletLine(p.walletAccount!), style: const TextStyle(fontSize: 12)),
                             ],
                             if (p.transactionId != null && p.transactionId!.isNotEmpty) ...[
                               const SizedBox(height: 2),
-                              Text('Txn: ${p.transactionId}', style: const TextStyle(fontSize: 12)),
+                              Text(l10n.txnLine(p.transactionId!), style: const TextStyle(fontSize: 12)),
                             ],
                             if (p.collectorName != null) ...[
                               const SizedBox(height: 2),
-                              Text('Collector: ${p.collectorName}', style: const TextStyle(fontSize: 12)),
+                              Text(l10n.collectorLine(p.collectorName!), style: const TextStyle(fontSize: 12)),
                             ],
                             if (p.rejectionReason != null) ...[
                               const SizedBox(height: 8),
                               Text(
-                                'Reason: ${p.rejectionReason}',
+                                l10n.reasonLabel(p.rejectionReason!),
                                 style: const TextStyle(color: AppColors.unpaid, fontSize: 13),
                               ),
                             ],
@@ -224,7 +222,7 @@ class PaymentApprovalsScreen extends ConsumerWidget {
                                 children: [
                                   Expanded(
                                     child: AppButton(
-                                      label: 'Reject',
+                                      label: l10n.reject,
                                       outlined: true,
                                       onPressed: () => _reject(ref, context, p),
                                     ),
@@ -232,7 +230,7 @@ class PaymentApprovalsScreen extends ConsumerWidget {
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: AppButton(
-                                      label: 'Accept',
+                                      label: l10n.accept,
                                       onPressed: () => _approve(ref, context, p),
                                     ),
                                   ),

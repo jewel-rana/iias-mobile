@@ -76,13 +76,13 @@ class _OrganizationSettingsScreenState
       ref.invalidate(orgSettingsProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${updated.organizationName} settings saved')),
+        SnackBar(content: Text(context.l10n.settingsSaved(updated.organizationName))),
       );
       popOrGo(context, '/more');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e')),
+        SnackBar(content: Text(context.l10n.couldNotSave(e))),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -107,6 +107,7 @@ class _OrganizationSettingsScreenState
             });
             return const Center(child: CircularProgressIndicator());
           }
+          final l10n = context.l10n;
           return Form(
             key: _formKey,
             child: ListView(
@@ -117,15 +118,15 @@ class _OrganizationSettingsScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Organization profile',
+                        l10n.organizationProfile,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'These settings apply to member joins, dues defaults, and referrals.',
-                        style: TextStyle(
+                      Text(
+                        l10n.organizationProfileHint,
+                        style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,
                         ),
@@ -133,30 +134,30 @@ class _OrganizationSettingsScreenState
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _name,
-                        decoration: const InputDecoration(
-                          labelText: 'Organization name',
+                        decoration: InputDecoration(
+                          labelText: l10n.organizationName,
                         ),
                         validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Required' : null,
+                            (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _tagline,
-                        decoration: const InputDecoration(labelText: 'Tagline'),
+                        decoration: InputDecoration(labelText: l10n.tagline),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _phone,
                         keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(
-                          labelText: 'Contact phone',
+                        decoration: InputDecoration(
+                          labelText: l10n.contactPhone,
                         ),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _address,
                         maxLines: 2,
-                        decoration: const InputDecoration(labelText: 'Address'),
+                        decoration: InputDecoration(labelText: l10n.address),
                       ),
                     ],
                   ),
@@ -167,7 +168,7 @@ class _OrganizationSettingsScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Collection defaults',
+                        l10n.collectionDefaults,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w800,
                             ),
@@ -176,24 +177,24 @@ class _OrganizationSettingsScreenState
                       TextFormField(
                         controller: _amount,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Default monthly amount',
+                        decoration: InputDecoration(
+                          labelText: l10n.defaultMonthlyAmount,
                           prefixText: '৳ ',
                         ),
                         validator: (v) {
                           final n = int.tryParse(v?.trim() ?? '');
-                          if (n == null || n < 1) return 'Enter a valid amount';
+                          if (n == null || n < 1) return l10n.enterValidAmount;
                           return null;
                         },
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _currency,
-                        decoration: const InputDecoration(
-                          labelText: 'Currency symbol',
+                        decoration: InputDecoration(
+                          labelText: l10n.currencySymbol,
                         ),
                         validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Required' : null,
+                            (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
                       ),
                     ],
                   ),
@@ -204,20 +205,16 @@ class _OrganizationSettingsScreenState
                     children: [
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Enable referrals'),
-                        subtitle: const Text(
-                          'Allow referral codes on join and donations',
-                        ),
+                        title: Text(l10n.enableReferrals),
+                        subtitle: Text(l10n.enableReferralsHint),
                         value: _referralEnabled,
                         onChanged: (v) => setState(() => _referralEnabled = v),
                       ),
                       const Divider(),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: const Text('Public join applications'),
-                        subtitle: const Text(
-                          'Let people apply from the login screen',
-                        ),
+                        title: Text(l10n.publicJoin),
+                        subtitle: Text(l10n.publicJoinHint),
                         value: _publicJoinEnabled,
                         onChanged: (v) =>
                             setState(() => _publicJoinEnabled = v),
@@ -227,7 +224,7 @@ class _OrganizationSettingsScreenState
                 ),
                 const SizedBox(height: 20),
                 AppButton(
-                  label: 'Save Settings',
+                  label: l10n.saveSettings,
                   loading: _saving,
                   onPressed: _save,
                 ),

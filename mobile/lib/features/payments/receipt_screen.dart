@@ -31,8 +31,8 @@ class ReceiptScreen extends StatelessWidget {
     if (!context.mounted) return;
     if (!opened) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('WhatsApp is not available. Receipt copied.'),
+        SnackBar(
+          content: Text(context.l10n.whatsappUnavailable),
         ),
       );
     }
@@ -42,12 +42,14 @@ class ReceiptScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final payment = _payment;
     final donation = _donation;
-    final date = DateFormat('dd MMM yyyy').format(
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final date = DateFormat('dd MMM yyyy', locale).format(
       payment?.date ?? donation!.date,
     );
     final receiptNo = payment?.receiptNumber ?? donation!.receiptNumber;
     final amount = payment?.amount ?? donation!.amount;
-    final title = payment != null ? 'PAYMENT RECEIPT' : 'DONATION RECEIPT';
+    final title = payment != null ? l10n.paymentReceiptTitle : l10n.donationReceiptTitle;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -87,39 +89,39 @@ class ReceiptScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 18),
-                      _row('Receipt', receiptNo),
-                      _row('Date', date),
+                      _row(l10n.receipt, receiptNo),
+                      _row(l10n.date, date),
                       if (payment != null)
                         _row(
-                          'Status',
+                          l10n.statusLabel,
                           payment.isPending
-                              ? 'Pending approval'
+                              ? l10n.pendingApproval
                               : payment.status == PaymentStatus.rejected
-                                  ? 'Rejected'
-                                  : 'Confirmed',
+                                  ? l10n.rejected
+                                  : l10n.confirmed,
                         ),
                       const Divider(height: 28),
                       if (payment != null) ...[
-                        _row('Member', payment.memberName),
-                        _row('Amount', formatTaka(amount)),
-                        _row('Method', paymentMethodLabel(payment.method)),
+                        _row(l10n.member, payment.memberName),
+                        _row(l10n.amount, formatTaka(amount)),
+                        _row(l10n.method, l10n.paymentMethodName(payment.method)),
                         if (payment.collectorName != null &&
                             payment.collectorName!.isNotEmpty)
                           _row(
                             payment.method == PaymentMethod.handCash
-                                ? 'Received by'
-                                : 'Collector',
+                                ? l10n.receivedBy
+                                : l10n.collector,
                             payment.collectorName!,
                           ),
                         if (payment.walletAccount?.isNotEmpty ?? false)
-                          _row('Wallet', payment.walletAccount!),
+                          _row(l10n.wallet, payment.walletAccount!),
                         if (payment.transactionId?.isNotEmpty ?? false)
-                          _row('Txn ID', payment.transactionId!),
+                          _row(l10n.txnId, payment.transactionId!),
                         const Divider(height: 28),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Covers',
+                            l10n.covers,
                             style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -133,7 +135,7 @@ class ReceiptScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    DateFormat('MMMM yyyy').format(a.billingMonth),
+                                    DateFormat('MMMM yyyy', locale).format(a.billingMonth),
                                   ),
                                 ),
                                 Text(formatTaka(a.amount)),
@@ -142,22 +144,22 @@ class ReceiptScreen extends StatelessWidget {
                           ),
                         ),
                       ] else if (donation != null) ...[
-                        _row('Campaign', donation.eventTitle),
-                        _row('Donor', donation.donorName),
+                        _row(l10n.campaign, donation.eventTitle),
+                        _row(l10n.donor, donation.donorName),
                         _row(
-                          'Type',
+                          l10n.type,
                           donation.donorType == DonorType.member
-                              ? 'Member'
-                              : 'Non-member',
+                              ? l10n.member
+                              : l10n.nonMember,
                         ),
                         if (donation.referredByName != null)
-                          _row('Referred by', donation.referredByName!),
-                        _row('Amount', formatTaka(amount)),
-                        _row('Method', paymentMethodLabel(donation.method)),
+                          _row(l10n.referredBy, donation.referredByName!),
+                        _row(l10n.amount, formatTaka(amount)),
+                        _row(l10n.method, l10n.paymentMethodName(donation.method)),
                       ],
                       const SizedBox(height: 16),
-                      const Text(
-                        'Thank you',
+                      Text(
+                        l10n.thankYou,
                         style: TextStyle(
                           fontWeight: FontWeight.w700,
                           color: AppColors.textSecondary,
@@ -174,7 +176,7 @@ class ReceiptScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: AppButton(
-                label: 'Share WhatsApp',
+                label: l10n.shareWhatsApp,
                 outlined: true,
                 onPressed: () => _share(context),
               ),

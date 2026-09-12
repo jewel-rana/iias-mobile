@@ -36,7 +36,7 @@ class MemberDetailScreen extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         appBar: IiasAppBar(title: l10n.memberDetails),
-        body: EmptyState(message: 'Unable to load member.\n$e'),
+        body: EmptyState(message: l10n.unableToLoadMember(e)),
       ),
       data: (data) {
         final member = data.member;
@@ -44,7 +44,7 @@ class MemberDetailScreen extends ConsumerWidget {
         if (member == null) {
           return Scaffold(
             appBar: IiasAppBar(title: l10n.memberDetails),
-            body: const EmptyState(message: 'Member not found'),
+            body: EmptyState(message: l10n.memberNotFound),
           );
         }
 
@@ -109,7 +109,7 @@ class MemberDetailScreen extends ConsumerWidget {
                             ),
                           if (member.joinedAt != null)
                             Text(
-                              'Joined ${DateFormat('dd MMM yyyy').format(member.joinedAt!)}',
+                              l10n.joinedOn(DateFormat('dd MMM yyyy', Localizations.localeOf(context).toString()).format(member.joinedAt!)),
                               style: const TextStyle(color: AppColors.textSecondary),
                             ),
                         ],
@@ -125,8 +125,8 @@ class MemberDetailScreen extends ConsumerWidget {
                     child: SectionCard(
                       child: Column(
                         children: [
-                          const Text(
-                            'Total Paid',
+                          Text(
+                            l10n.totalPaid,
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -142,8 +142,8 @@ class MemberDetailScreen extends ConsumerWidget {
                     child: SectionCard(
                       child: Column(
                         children: [
-                          const Text(
-                            'Outstanding',
+                          Text(
+                            l10n.outstanding,
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -159,8 +159,8 @@ class MemberDetailScreen extends ConsumerWidget {
                     child: SectionCard(
                       child: Column(
                         children: [
-                          const Text(
-                            'Advance',
+                          Text(
+                            l10n.advance,
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
@@ -178,8 +178,8 @@ class MemberDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Current Dues (2026)',
+                    Text(
+                      l10n.currentDues,
                       style: TextStyle(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 12),
@@ -187,17 +187,17 @@ class MemberDetailScreen extends ConsumerWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _DueStat(
-                          label: 'Paid',
+                          label: l10n.paid,
                           value: '${member.paidMonths}',
                           color: AppColors.paid,
                         ),
                         _DueStat(
-                          label: 'Due',
+                          label: l10n.due,
                           value: '${member.dueMonths}',
                           color: AppColors.unpaid,
                         ),
                         _DueStat(
-                          label: 'Advance',
+                          label: l10n.advance,
                           value: '${member.advanceMonths}',
                           color: AppColors.advance,
                         ),
@@ -205,13 +205,13 @@ class MemberDetailScreen extends ConsumerWidget {
                     ),
                     const Divider(height: 28),
                     ...dues.map((d) {
-                      final label = DateFormat('MMM yyyy').format(d.billingMonth);
+                      final label = DateFormat('MMM yyyy', Localizations.localeOf(context).toString()).format(d.billingMonth);
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Row(
                           children: [
                             Expanded(child: Text(label)),
-                            Text('৳ ${d.amountPaid}/${d.amountDue}'),
+                            Text('? ${d.amountPaid}/${d.amountDue}'),
                             const SizedBox(width: 8),
                             if (d.status == DueStatus.paid) const StatusBadge.paid(),
                             if (d.status == DueStatus.partial)
@@ -232,7 +232,7 @@ class MemberDetailScreen extends ConsumerWidget {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.receipt_long),
-                      title: const Text('Payment History'),
+                      title: Text(l10n.paymentHistory),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {},
                     ),
@@ -240,7 +240,7 @@ class MemberDetailScreen extends ConsumerWidget {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.volunteer_activism),
-                      title: const Text('Donations'),
+                      title: Text(l10n.donations),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {},
                     ),
@@ -248,13 +248,13 @@ class MemberDetailScreen extends ConsumerWidget {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.share),
-                      title: Text('Referral: ${member.referralCode}'),
+                      title: Text(l10n.referralCodeLabel(member.referralCode)),
                       trailing: const Icon(Icons.copy),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Referral ${member.referralCode} ready to share',
+                              l10n.referralReady(member.referralCode),
                             ),
                           ),
                         );

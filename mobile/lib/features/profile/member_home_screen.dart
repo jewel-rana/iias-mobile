@@ -45,6 +45,7 @@ class MemberHomeScreen extends ConsumerWidget {
           );
         }
         final payments = allPayments.where((p) => p.memberId == member.id).toList();
+        final l10n = context.l10n;
 
         return Scaffold(
           appBar: IiasAppBar(
@@ -79,8 +80,8 @@ class MemberHomeScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('My Contribution',
-                          style: TextStyle(color: AppColors.textSecondary)),
+                      Text(l10n.myContribution,
+                          style: const TextStyle(color: AppColors.textSecondary)),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -88,7 +89,7 @@ class MemberHomeScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Total Paid', style: TextStyle(fontSize: 12)),
+                                Text(l10n.totalPaid, style: const TextStyle(fontSize: 12)),
                                 MoneyText(member.totalPaid),
                               ],
                             ),
@@ -97,7 +98,7 @@ class MemberHomeScreen extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('Outstanding', style: TextStyle(fontSize: 12)),
+                                Text(l10n.outstanding, style: const TextStyle(fontSize: 12)),
                                 MoneyText(member.outstanding, color: AppColors.unpaid),
                               ],
                             ),
@@ -110,23 +111,23 @@ class MemberHomeScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _mini('Paid', '${member.paidMonths}', AppColors.paid)),
+                    Expanded(child: _mini(l10n.paid, '${member.paidMonths}', AppColors.paid)),
                     const SizedBox(width: 8),
-                    Expanded(child: _mini('Due', '${member.dueMonths}', AppColors.unpaid)),
+                    Expanded(child: _mini(l10n.due, '${member.dueMonths}', AppColors.unpaid)),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: _mini('Advance', '${member.advanceMonths}', AppColors.advance),
+                      child: _mini(l10n.advance, '${member.advanceMonths}', AppColors.advance),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
                 AppButton(
-                  label: 'Submit Payment',
+                  label: l10n.submitPayment,
                   onPressed: () => context.push('/collect/${member.id}'),
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Recent Payments',
+                  l10n.recentPayments,
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
@@ -134,7 +135,7 @@ class MemberHomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 if (payments.isEmpty)
-                  const EmptyState(message: 'No payments yet')
+                  EmptyState(message: l10n.noPaymentsYet)
                 else
                   ...payments.map(
                     (p) => Padding(
@@ -186,7 +187,7 @@ class MemberHomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 AppButton(
-                  label: 'View Fundraising Events',
+                  label: l10n.viewFundraisingEvents,
                   outlined: true,
                   onPressed: () => context.push('/events'),
                 ),
@@ -194,14 +195,14 @@ class MemberHomeScreen extends ConsumerWidget {
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: 0,
-            destinations: const [
-              NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-              NavigationDestination(icon: Icon(Icons.payments_outlined), label: 'Payments'),
+            destinations: [
+              NavigationDestination(icon: const Icon(Icons.home_outlined), label: l10n.home),
+              NavigationDestination(icon: const Icon(Icons.payments_outlined), label: l10n.payments),
               NavigationDestination(
-                icon: Icon(Icons.volunteer_activism_outlined),
-                label: 'Donations',
+                icon: const Icon(Icons.volunteer_activism_outlined),
+                label: l10n.donations,
               ),
-              NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
+              NavigationDestination(icon: const Icon(Icons.person_outline), label: l10n.profile),
             ],
             onDestinationSelected: (index) {
               if (index == 1) {

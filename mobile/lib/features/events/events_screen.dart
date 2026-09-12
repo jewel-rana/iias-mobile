@@ -36,6 +36,7 @@ class EventsScreen extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-funds',
         onPressed: () => context.push('/add-campaign'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -94,13 +95,17 @@ class EventsScreen extends ConsumerWidget {
                           ProgressBar(value: e.progress),
                           const SizedBox(height: 8),
                           Text(
-                            '৳ ${e.raisedAmount} of ৳ ${e.goalAmount} · ${e.donorCount} donors',
+                            l10n.raisedOf(
+                              '${e.raisedAmount}',
+                              '${e.goalAmount}',
+                              e.donorCount,
+                            ),
                             style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                           ),
                           const SizedBox(height: 12),
                           if (e.status == EventStatus.active)
                             AppButton(
-                              label: 'Donate',
+                              label: l10n.donate,
                               onPressed: () => context.push('/new-donation?eventId=${e.id}'),
                             ),
                         ],

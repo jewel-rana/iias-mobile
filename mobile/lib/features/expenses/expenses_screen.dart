@@ -34,30 +34,33 @@ class ExpensesScreen extends ConsumerWidget {
     final recurrence = ref.watch(expensesRecurrenceFilterProvider);
     final expensesAsync = ref.watch(expensesProvider);
     final statsAsync = ref.watch(dashboardProvider);
-    final dateFmt = DateFormat('dd MMM yyyy');
+    final l10n = context.l10n;
+    final locale = Localizations.localeOf(context).toString();
+    final dateFmt = DateFormat('dd MMM yyyy', locale);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
-        title: context.l10n.expenses,
+        title: l10n.expenses,
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            tooltip: 'Manage heads',
+            tooltip: l10n.manageHeadsTooltip,
             onPressed: () => context.push('/expense-heads'),
             icon: const Icon(Icons.category_outlined),
           ),
           IconButton(
-            tooltip: 'Add expense',
+            tooltip: l10n.addExpenseTooltip,
             onPressed: () => context.push('/add-expense'),
             icon: const Icon(Icons.add_rounded),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-expenses',
         onPressed: () => context.push('/add-expense'),
         icon: const Icon(Icons.add),
-        label: const Text('Add Expense'),
+        label: Text(l10n.addExpense),
       ),
       body: Column(
         children: [
@@ -72,7 +75,7 @@ class ExpensesScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _FundStat(
-                        label: 'Funds Available',
+                        label: l10n.fundsAvailable,
                         value: stats.fundsAvailable,
                         color: AppColors.primary,
                       ),
@@ -80,7 +83,7 @@ class ExpensesScreen extends ConsumerWidget {
                     Container(width: 1, height: 40, color: AppColors.border),
                     Expanded(
                       child: _FundStat(
-                        label: 'Total Spent',
+                        label: l10n.totalSpent,
                         value: stats.totalExpenses,
                         color: AppColors.unpaid,
                       ),
@@ -97,25 +100,25 @@ class ExpensesScreen extends ConsumerWidget {
             child: Row(
               children: [
                 _Pill(
-                  label: 'All',
+                  label: l10n.all,
                   selected: kind == null,
                   onTap: () =>
                       ref.read(expensesKindFilterProvider.notifier).state = null,
                 ),
                 _Pill(
-                  label: 'Salary',
+                  label: l10n.salary,
                   selected: kind == ExpenseHeadKind.salary,
                   onTap: () => ref.read(expensesKindFilterProvider.notifier).state =
                       ExpenseHeadKind.salary,
                 ),
                 _Pill(
-                  label: 'Festival Bonus',
+                  label: l10n.festivalBonus,
                   selected: kind == ExpenseHeadKind.festivalBonus,
                   onTap: () => ref.read(expensesKindFilterProvider.notifier).state =
                       ExpenseHeadKind.festivalBonus,
                 ),
                 _Pill(
-                  label: 'Operational',
+                  label: l10n.operational,
                   selected: kind == ExpenseHeadKind.operational,
                   onTap: () => ref.read(expensesKindFilterProvider.notifier).state =
                       ExpenseHeadKind.operational,
@@ -130,21 +133,21 @@ class ExpensesScreen extends ConsumerWidget {
             child: Row(
               children: [
                 _Pill(
-                  label: 'Any type',
+                  label: l10n.anyType,
                   selected: recurrence == null,
                   onTap: () => ref
                       .read(expensesRecurrenceFilterProvider.notifier)
                       .state = null,
                 ),
                 _Pill(
-                  label: 'Monthly',
+                  label: l10n.monthly,
                   selected: recurrence == ExpenseRecurrence.monthly,
                   onTap: () => ref
                       .read(expensesRecurrenceFilterProvider.notifier)
                       .state = ExpenseRecurrence.monthly,
                 ),
                 _Pill(
-                  label: 'Occasional',
+                  label: l10n.occasional,
                   selected: recurrence == ExpenseRecurrence.occasional,
                   onTap: () => ref
                       .read(expensesRecurrenceFilterProvider.notifier)
@@ -164,7 +167,7 @@ class ExpensesScreen extends ConsumerWidget {
                       '/add-expense?kind=salary',
                     ),
                     icon: const Icon(Icons.payments_outlined, size: 18),
-                    label: const Text('Pay Salary'),
+                    label: Text(l10n.paySalary),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -174,7 +177,7 @@ class ExpensesScreen extends ConsumerWidget {
                       '/add-expense?kind=festival_bonus',
                     ),
                     icon: const Icon(Icons.celebration_outlined, size: 18),
-                    label: const Text('Festival Bonus'),
+                    label: Text(l10n.festivalBonus),
                   ),
                 ),
               ],
@@ -206,7 +209,7 @@ class ExpensesScreen extends ConsumerWidget {
                                 child: Text(
                                   dueHeads
                                       .map((d) =>
-                                          '${d.headName}: ${d.dueCount} month${d.dueCount == 1 ? '' : 's'} due')
+                                          l10n.monthsDue(d.headName, d.dueCount))
                                       .join(' · '),
                                   style: const TextStyle(
                                     color: AppColors.unpaid,
@@ -234,7 +237,7 @@ class ExpensesScreen extends ConsumerWidget {
               error: (e, _) => Center(child: Text('$e')),
               data: (expenses) {
                 if (expenses.isEmpty) {
-                  return const EmptyState(message: 'No expenses recorded yet');
+                  return EmptyState(message: l10n.noExpensesRecorded);
                 }
                 return RefreshIndicator(
                   onRefresh: () async {
@@ -280,7 +283,7 @@ class ExpensesScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '${e.headName} · ${e.headKind.label} · ${e.recurrence.label}',
+                                    '${e.headName} · ${l10n.expenseKindLabel(e.headKind)} · ${l10n.expenseRecurrenceLabel(e.recurrence)}',
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 12,
@@ -289,7 +292,11 @@ class ExpensesScreen extends ConsumerWidget {
                                   const SizedBox(height: 2),
                                   Text(
                                     e.periodMonth != null
-                                        ? 'Salary month ${DateFormat('MMMM yyyy').format(e.periodMonth!)} · Paid ${dateFmt.format(e.expenseDate)}'
+                                        ? l10n.salaryMonthPaid(
+                                            DateFormat('MMMM yyyy', locale)
+                                                .format(e.periodMonth!),
+                                            dateFmt.format(e.expenseDate),
+                                          )
                                         : dateFmt.format(e.expenseDate),
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,

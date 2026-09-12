@@ -74,6 +74,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-members',
         onPressed: () => context.push('/add-member'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -94,7 +95,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 suffixIcon: _query.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Clear',
+                        tooltip: l10n.clear,
                         onPressed: () {
                           _searchCtrl.clear();
                           setState(() => _query = '');
@@ -158,13 +159,13 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Unable to load members.\n$e',
+                        '${l10n.unableToLoadMembers}\n$e',
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 12),
                       AppButton(
-                        label: 'Retry',
+                        label: l10n.retry,
                         onPressed: () => ref.invalidate(membersProvider),
                       ),
                     ],
@@ -180,8 +181,8 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                 if (members.isEmpty) {
                   return EmptyState(
                     message: _query.trim().isEmpty
-                        ? 'No members found'
-                        : 'No members match "$_query"',
+                        ? l10n.noMembersFound
+                        : l10n.noMembersMatch(_query),
                   );
                 }
                 return RefreshIndicator(
@@ -236,7 +237,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      '৳ ${m.monthlyAmount} / month',
+                                      l10n.perMonth('${m.monthlyAmount}'),
                                       style: const TextStyle(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.w700,
@@ -244,7 +245,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                                       ),
                                     ),
                                     Text(
-                                      'Collector: ${m.collectorName}',
+                                      l10n.collectorOf(m.collectorName),
                                       style: const TextStyle(
                                         color: AppColors.textSecondary,
                                         fontSize: 12,

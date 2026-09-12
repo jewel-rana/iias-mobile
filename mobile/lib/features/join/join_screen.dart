@@ -47,7 +47,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not submit: $e')),
+        SnackBar(content: Text(context.l10n.couldNotSubmit(e))),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -56,8 +56,9 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
-      appBar: IiasAppBar(title: context.l10n.joinOrganization),
+      appBar: IiasAppBar(title: l10n.joinOrganization),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: _submitted
@@ -68,62 +69,62 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                       size: 72, color: AppColors.primary),
                   const SizedBox(height: 16),
                   Text(
-                    'Application submitted',
+                    l10n.applicationSubmitted,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'An admin will review your join request in the app. You will be notified after approval.',
+                  Text(
+                    l10n.applicationSubmittedHint,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary),
+                    style: const TextStyle(color: AppColors.textSecondary),
                   ),
                   const Spacer(),
-                  AppButton(label: 'Back to Login', onPressed: () => context.go('/login')),
+                  AppButton(label: l10n.backToLogin, onPressed: () => context.go('/login')),
                 ],
               )
             : Form(
                 key: _formKey,
                 child: ListView(
                   children: [
-                    const Text(
-                      'Submit a membership application. Admin approval happens in the mobile app — no web panel.',
-                      style: TextStyle(color: AppColors.textSecondary),
+                    Text(
+                      l10n.joinFormHint,
+                      style: const TextStyle(color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _name,
-                      decoration: const InputDecoration(labelText: 'Full Name'),
+                      decoration: InputDecoration(labelText: l10n.fullName),
                       validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                          (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _phone,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'Phone'),
+                      decoration: InputDecoration(labelText: l10n.phone),
                       validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                          (v == null || v.trim().isEmpty) ? l10n.requiredField : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email (optional)',
+                      decoration: InputDecoration(
+                        labelText: l10n.emailOptional,
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _referral,
-                      decoration: const InputDecoration(
-                        labelText: 'Referral code (optional)',
+                      decoration: InputDecoration(
+                        labelText: l10n.referralCodeOptional,
                       ),
                     ),
                     const SizedBox(height: 24),
                     AppButton(
-                      label: 'Submit Application',
+                      label: l10n.submitApplication,
                       loading: _loading,
                       onPressed: _submit,
                     ),

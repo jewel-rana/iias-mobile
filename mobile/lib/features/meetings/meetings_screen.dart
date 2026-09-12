@@ -37,6 +37,7 @@ class MeetingsScreen extends ConsumerWidget {
       appBar: IiasAppBar(title: l10n.meetings),
       floatingActionButton: staff
           ? FloatingActionButton.extended(
+              heroTag: 'fab-meetings',
               onPressed: () => context.push('/open-meeting'),
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,

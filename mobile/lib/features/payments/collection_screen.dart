@@ -51,7 +51,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 suffixIcon: _query.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Clear',
+                        tooltip: l10n.clear,
                         onPressed: () {
                           _searchCtrl.clear();
                           setState(() => _query = '');
@@ -115,13 +115,13 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Unable to load members.\n$e',
+                        '${l10n.unableToLoadMembers}\n$e',
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 12),
                       AppButton(
-                        label: 'Retry',
+                        label: l10n.retry,
                         onPressed: () => ref.invalidate(membersProvider),
                       ),
                     ],
@@ -137,8 +137,8 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 if (members.isEmpty) {
                   return EmptyState(
                     message: _query.trim().isEmpty
-                        ? 'No members found'
-                        : 'No members match "$_query"',
+                        ? l10n.noMembersFound
+                        : l10n.noMembersMatch(_query),
                   );
                 }
                 return RefreshIndicator(
@@ -192,7 +192,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '৳ ${m.monthlyAmount} / month',
+                                        l10n.perMonth('${m.monthlyAmount}'),
                                         style: const TextStyle(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.w700,
@@ -200,7 +200,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'Outstanding: ৳ ${m.outstanding}',
+                                        l10n.outstandingAmount('${m.outstanding}'),
                                         style: const TextStyle(
                                           color: AppColors.textSecondary,
                                           fontSize: 12,
@@ -218,7 +218,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                               child: ElevatedButton.icon(
                                 onPressed: () => context.push('/collect/${m.id}'),
                                 icon: const Icon(Icons.payments_rounded, size: 18),
-                                label: const Text('Collect Payment'),
+                                label: Text(l10n.collectPayment),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,

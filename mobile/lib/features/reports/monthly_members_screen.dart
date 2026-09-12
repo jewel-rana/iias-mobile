@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
+import '../../l10n/app_localizations.dart';
 
 class MonthlyMembersScreen extends ConsumerWidget {
   const MonthlyMembersScreen({super.key, required this.filter});
@@ -29,9 +30,15 @@ class MonthlyMembersScreen extends ConsumerWidget {
     return FutureBuilder(
       future: ref.read(repositoryProvider).getMembers(status: _status),
       builder: (context, snapshot) {
-        final title = filter[0].toUpperCase() + filter.substring(1);
+        final l10n = context.l10n;
+        final title = switch (filter) {
+          'paid' => l10n.paid,
+          'partial' => l10n.partial,
+          'unpaid' => l10n.unpaid,
+          _ => l10n.members,
+        };
         return Scaffold(
-          appBar: IiasAppBar(title: '$title · September 2026'),
+          appBar: IiasAppBar(title: title),
           body: !snapshot.hasData
               ? const Center(child: CircularProgressIndicator())
               : ListView.separated(

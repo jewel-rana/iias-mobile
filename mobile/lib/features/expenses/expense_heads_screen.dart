@@ -22,16 +22,17 @@ class ExpenseHeadsScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(title: context.l10n.expenseHeads),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-expense-heads',
         onPressed: () => _openEditor(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text('Add Head'),
+        label: Text(context.l10n.addHead),
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),
         data: (heads) {
           if (heads.isEmpty) {
-            return const EmptyState(message: 'No expense heads yet');
+            return EmptyState(message: context.l10n.noExpenseHeadsYet);
           }
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(allExpenseHeadsProvider),
@@ -58,8 +59,8 @@ class ExpenseHeadsScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${head.kind.label} · ${head.defaultRecurrence.label}'
-                              '${head.isActive ? '' : ' · Inactive'}',
+                              '${context.l10n.expenseKindLabel(head.kind)} · ${context.l10n.expenseRecurrenceLabel(head.defaultRecurrence)}'
+                              '${head.isActive ? '' : ' · ${context.l10n.inactive}'}',
                               style: const TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 12,
@@ -69,12 +70,14 @@ class ExpenseHeadsScreen extends ConsumerWidget {
                         ),
                       ),
                       IconButton(
-                        tooltip: 'Edit',
+                        tooltip: context.l10n.edit,
                         onPressed: () => _openEditor(context, ref, head: head),
                         icon: const Icon(Icons.edit_outlined),
                       ),
                       IconButton(
-                        tooltip: head.isActive ? 'Deactivate' : 'Delete',
+                        tooltip: head.isActive
+                            ? context.l10n.deactivate
+                            : context.l10n.delete,
                         onPressed: () => _delete(context, ref, head),
                         icon: Icon(
                           head.isActive
@@ -102,20 +105,20 @@ class ExpenseHeadsScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(head.isActive ? 'Deactivate head?' : 'Delete head?'),
+        title: Text(head.isActive ? context.l10n.deactivateHead : context.l10n.deleteHead),
         content: Text(
           head.isActive
-              ? 'Heads already used by expenses are deactivated instead of deleted.'
-              : 'Remove "${head.name}" if unused.',
+              ? context.l10n.deactivateHeadHint
+              : context.l10n.deleteHeadHint(head.name),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(head.isActive ? 'Deactivate' : 'Delete'),
+            child: Text(head.isActive ? context.l10n.deactivate : context.l10n.delete),
           ),
         ],
       ),
@@ -127,7 +130,7 @@ class ExpenseHeadsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not update: $e')),
+          SnackBar(content: Text(context.l10n.couldNotUpdate(e))),
         );
       }
     }
@@ -161,7 +164,9 @@ class ExpenseHeadsScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    head == null ? 'New expense head' : 'Edit expense head',
+                    head == null
+                        ? context.l10n.newExpenseHead
+                        : context.l10n.editExpenseHead,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),
@@ -169,20 +174,20 @@ class ExpenseHeadsScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   TextField(
                     controller: nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      hintText: "e.g. Imam's Salary",
+                    decoration: InputDecoration(
+                      labelText: context.l10n.name,
+                      hintText: context.l10n.expenseHeadNameHint,
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<ExpenseHeadKind>(
                     value: kind,
-                    decoration: const InputDecoration(labelText: 'Kind'),
+                    decoration: InputDecoration(labelText: context.l10n.kind),
                     items: ExpenseHeadKind.values
                         .map(
                           (k) => DropdownMenuItem(
                             value: k,
-                            child: Text(k.label),
+                            child: Text(context.l10n.expenseKindLabel(k)),
                           ),
                         )
                         .toList(),
@@ -194,12 +199,12 @@ class ExpenseHeadsScreen extends ConsumerWidget {
                   DropdownButtonFormField<ExpenseRecurrence>(
                     value: recurrence,
                     decoration:
-                        const InputDecoration(labelText: 'Default type'),
+                        InputDecoration(labelText: context.l10n.defaultType),
                     items: ExpenseRecurrence.values
                         .map(
                           (r) => DropdownMenuItem(
                             value: r,
-                            child: Text(r.label),
+                            child: Text(context.l10n.expenseRecurrenceLabel(r)),
                           ),
                         )
                         .toList(),
@@ -211,14 +216,16 @@ class ExpenseHeadsScreen extends ConsumerWidget {
                     const SizedBox(height: 8),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Active'),
+                      title: Text(context.l10n.active),
                       value: isActive,
                       onChanged: (v) => setModalState(() => isActive = v),
                     ),
                   ],
                   const SizedBox(height: 16),
                   AppButton(
-                    label: head == null ? 'Create Head' : 'Save Changes',
+                    label: head == null
+                        ? context.l10n.createHead
+                        : context.l10n.saveChanges,
                     onPressed: () async {
                       if (nameCtrl.text.trim().isEmpty) return;
                       try {
