@@ -31,6 +31,7 @@ class MemberDetailScreen extends ConsumerWidget {
     final async = ref.watch(memberDetailProvider(memberId));
     final user = ref.watch(authStateProvider);
     final canSetRole = user?.can(AppPermission.membersCreate) ?? false;
+    final canCollect = user?.canCollectPayments ?? false;
     final l10n = context.l10n;
 
     return async.when(
@@ -69,15 +70,17 @@ class MemberDetailScreen extends ConsumerWidget {
                 ),
             ],
           ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: AppButton(
-                label: l10n.collectPayment,
-                onPressed: () => context.push('/collect/${member.id}'),
-              ),
-            ),
-          ),
+          bottomNavigationBar: canCollect
+              ? SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: AppButton(
+                      label: l10n.collectPayment,
+                      onPressed: () => context.push('/collect/${member.id}'),
+                    ),
+                  ),
+                )
+              : null,
           body: ListView(
             padding: const EdgeInsets.all(16),
             children: [

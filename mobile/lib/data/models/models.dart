@@ -130,11 +130,14 @@ class AppUser {
     return false;
   }
 
+  bool get canCollectPayments => can(AppPermission.collectionCollect);
+
   bool get isStaff =>
       role == UserRole.admin ||
       role == UserRole.collector ||
       can(AppPermission.membersView) ||
       can(AppPermission.collectionView) ||
+      canCollectPayments ||
       can(AppPermission.rolesManage);
 
   String get roleLabel => (roleName != null && roleName!.isNotEmpty)

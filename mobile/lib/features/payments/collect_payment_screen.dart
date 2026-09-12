@@ -54,9 +54,21 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
       '${month.year}-${month.month.toString().padLeft(2, '0')}';
 
   Future<void> _load() async {
+    final user = ref.read(authStateProvider);
+    final canCollectForOthers = user?.canCollectPayments == true;
+    var memberId = widget.memberId;
+    if (!canCollectForOthers) {
+      final selfId = user?.memberId;
+      if (selfId == null || selfId.isEmpty) {
+        if (mounted) setState(() => _busy = false);
+        return;
+      }
+      memberId = selfId;
+    }
+
     final repo = ref.read(repositoryProvider);
-    final member = await repo.getMember(widget.memberId);
-    final dues = await repo.getMemberDues(widget.memberId);
+    final member = await repo.getMember(memberId);
+    final dues = await repo.getMemberDues(memberId);
     final members = await repo.getMembers();
     if (!mounted) return;
 
@@ -74,7 +86,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     setState(() {
       _member = member;
       _dues = dues;
-      _members = members.where((m) => m.id != widget.memberId).toList();
+      _members = members.where((m) => m.id != memberId).toList();
       _selectedCollector = defaultCollector;
       _selectedKeys.clear();
       _busy = false;
@@ -278,7 +290,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
       return;
     }
 
-    final isSelfSubmit = ref.read(authStateProvider)?.isStaff != true;
+    final isSelfSubmit = ref.read(authStateProvider)?.canCollectPayments != true;
     if (isSelfSubmit) {
       final ok = await showDialog<bool>(
         context: context,
@@ -344,8 +356,7 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
     final member = _member!;
     final months = _selectableMonths;
     final allocated = _allocatedTotal;
-    final isSelfSubmit =
-        ref.watch(authStateProvider)?.isStaff != true;
+    final isSelfSubmit = ref.watch(authStateProvider)?.canCollectPayments != true;
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
 

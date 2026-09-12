@@ -56,6 +56,9 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
   Widget build(BuildContext context) {
     final filter = ref.watch(collectionFilterProvider);
     final async = ref.watch(collectionPaymentsProvider);
+    final user = ref.watch(authStateProvider);
+    final canCollectForOthers = user?.canCollectPayments == true;
+    final selfMemberId = user?.memberId;
     final l10n = context.l10n;
     final dateFmt = DateFormat(
       'dd MMM yyyy · hh:mm a',
@@ -68,21 +71,25 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
         title: l10n.collection,
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            tooltip: l10n.addPayment,
-            onPressed: () => _addPayment(context),
-            icon: const Icon(Icons.add_card_rounded),
-          ),
+          if (canCollectForOthers || (selfMemberId != null && selfMemberId.isNotEmpty))
+            IconButton(
+              tooltip: canCollectForOthers ? l10n.addPayment : l10n.submitPayment,
+              onPressed: () => _addPayment(context),
+              icon: const Icon(Icons.add_card_rounded),
+            ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'fab-collection',
-        onPressed: () => _addPayment(context),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: Text(l10n.addPayment),
-      ),
+      floatingActionButton: (canCollectForOthers ||
+              (selfMemberId != null && selfMemberId.isNotEmpty))
+          ? FloatingActionButton.extended(
+              heroTag: 'fab-collection',
+              onPressed: () => _addPayment(context),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add),
+              label: Text(canCollectForOthers ? l10n.addPayment : l10n.submitPayment),
+            )
+          : null,
       body: Column(
         children: [
           Padding(
@@ -261,6 +268,14 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
   }
 
   Future<void> _addPayment(BuildContext context) async {
+    final user = ref.read(authStateProvider);
+    if (user?.canCollectPayments != true) {
+      final selfId = user?.memberId;
+      if (selfId == null || selfId.isEmpty) return;
+      context.push('/collect/$selfId');
+      return;
+    }
+
     List<Member> members;
     try {
       members = await ref.read(membersProvider.future);
