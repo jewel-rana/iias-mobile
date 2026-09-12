@@ -54,6 +54,7 @@ abstract class AppRepository {
     required String id,
     String? email,
     String? roleId,
+    int? monthlyAmount,
   });
   Future<List<MonthlyDue>> getMemberDues(String memberId);
   Future<PaymentRecord> createPayment({
@@ -73,6 +74,7 @@ abstract class AppRepository {
   Future<PaymentRecord> getPayment(String id);
   Future<PaymentRecord> approvePayment(String id);
   Future<PaymentRecord> rejectPayment(String id, {String? reason});
+  Future<void> deletePayment(String id);
   Future<List<FundraisingEvent>> getEvents({bool activeOnly = false});  Future<FundraisingEvent> createFundraisingEvent({
     required String title,
     required int goalAmount,
@@ -377,6 +379,7 @@ class MockAppRepository implements AppRepository {
     required String id,
     String? email,
     String? roleId,
+    int? monthlyAmount,
   }) async {
     final idx = _members.indexWhere((m) => m.id == id);
     if (idx < 0) {
@@ -388,7 +391,7 @@ class MockAppRepository implements AppRepository {
       memberCode: current.memberCode,
       name: current.name,
       phone: current.phone,
-      monthlyAmount: current.monthlyAmount,
+      monthlyAmount: monthlyAmount ?? current.monthlyAmount,
       collectorName: current.collectorName,
       status: current.status,
       totalPaid: current.totalPaid,
@@ -513,6 +516,11 @@ class MockAppRepository implements AppRepository {
     );
     _payments[idx] = updated;
     return updated;
+  }
+
+  @override
+  Future<void> deletePayment(String id) async {
+    _payments.removeWhere((p) => p.id == id);
   }
 
   @override

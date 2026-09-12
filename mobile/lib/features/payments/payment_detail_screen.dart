@@ -3,11 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/money.dart';
 import '../../core/utils/receipt_share.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../members/member_detail_screen.dart';
+import '../members/member_payments_screen.dart';
+import '../members/members_screen.dart';
+import 'payment_approvals_screen.dart';
 import 'receipt_screen.dart';
 
 final paymentDetailProvider =
@@ -46,7 +52,7 @@ class PaymentDetailScreen extends ConsumerWidget {
   }
 }
 
-class _PaymentDetailBody extends StatelessWidget {
+class _PaymentDetailBody extends ConsumerWidget {
   const _PaymentDetailBody({required this.payment});
 
   final PaymentRecord payment;
@@ -67,12 +73,56 @@ class _PaymentDetailBody extends StatelessWidget {
     }
   }
 
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deletePayment),
+        content: Text(
+          l10n.deletePaymentHint(payment.receiptNumber, formatTaka(payment.amount)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !context.mounted) return;
+    try {
+      await ref.read(repositoryProvider).deletePayment(payment.id);
+      ref.invalidate(dashboardProvider);
+      ref.invalidate(membersProvider);
+      ref.invalidate(paymentApprovalsProvider);
+      ref.invalidate(memberPaymentsProvider(payment.memberId));
+      ref.invalidate(memberDetailProvider(payment.memberId));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.paymentDeleted(payment.receiptNumber))),
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.deletePaymentFailed(e))),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final locale = Localizations.localeOf(context).toString();
     final dateFmt = DateFormat('dd MMM yyyy · hh:mm a', locale);
     final monthFmt = DateFormat('MMMM yyyy', locale);
+    final canDelete =
+        ref.watch(authStateProvider)?.can(AppPermission.collectionCollect) ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -167,6 +217,14 @@ class _PaymentDetailBody extends StatelessWidget {
             outlined: true,
             onPressed: () => _share(context),
           ),
+          if (canDelete) ...[
+            const SizedBox(height: 10),
+            AppButton(
+              label: l10n.deletePayment,
+              outlined: true,
+              onPressed: () => _delete(context, ref),
+            ),
+          ],
         ],
       ),
     );

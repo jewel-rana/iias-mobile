@@ -8,6 +8,8 @@ import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../dashboard/dashboard_screen.dart';
+import 'members_screen.dart';
 
 final memberDetailProvider =
     FutureProvider.autoDispose.family<({Member? member, List<MonthlyDue> dues}), String>(
@@ -56,7 +58,17 @@ class MemberDetailScreen extends ConsumerWidget {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: IiasAppBar(title: l10n.memberDetails),
+          appBar: IiasAppBar(
+            title: l10n.memberDetails,
+            actions: [
+              if (canSetRole)
+                IconButton(
+                  tooltip: l10n.editMember,
+                  onPressed: () => _editMember(context, ref, member),
+                  icon: const Icon(Icons.edit_outlined),
+                ),
+            ],
+          ),
           bottomNavigationBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -106,7 +118,7 @@ class MemberDetailScreen extends ConsumerWidget {
                           ),
                           if (member.roleName != null && member.roleName!.isNotEmpty)
                             InkWell(
-                              onTap: canSetRole ? () => _setRole(context, ref, member) : null,
+                              onTap: canSetRole ? () => _editMember(context, ref, member) : null,
                               child: Text(
                                 member.roleName!,
                                 style: const TextStyle(color: AppColors.textSecondary),
@@ -114,18 +126,28 @@ class MemberDetailScreen extends ConsumerWidget {
                             )
                           else if (canSetRole)
                             TextButton(
-                              onPressed: () => _setRole(context, ref, member),
+                              onPressed: () => _editMember(context, ref, member),
                               child: Text(l10n.loginRole),
                             ),
+                          InkWell(
+                            onTap: canSetRole ? () => _editMember(context, ref, member) : null,
+                            child: Text(
+                              l10n.perMonth('${member.monthlyAmount}'),
+                              style: TextStyle(
+                                color: canSetRole ? AppColors.primary : AppColors.textSecondary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                           if (member.email != null && member.email!.isNotEmpty)
                             InkWell(
-                              onTap: () => _setEmail(context, ref, member),
+                              onTap: canSetRole ? () => _setEmail(context, ref, member) : null,
                               child: Text(
                                 member.email!,
                                 style: const TextStyle(color: AppColors.textSecondary),
                               ),
                             )
-                          else
+                          else if (canSetRole)
                             TextButton(
                               onPressed: () => _setEmail(context, ref, member),
                               child: Text(l10n.addEmail),
@@ -323,7 +345,7 @@ class _DueStat extends StatelessWidget {
   }
 }
 
-Future<void> _setRole(BuildContext context, WidgetRef ref, Member member) async {
+Future<void> _editMember(BuildContext context, WidgetRef ref, Member member) async {
   final l10n = context.l10n;
   List<AccessRole> roles;
   try {
@@ -339,44 +361,78 @@ Future<void> _setRole(BuildContext context, WidgetRef ref, Member member) async 
   var selected = roles.any((r) => r.id == member.roleId)
       ? member.roleId
       : roles.where((r) => r.code == 'member').firstOrNull?.id ?? roles.first.id;
-  final roleId = await showDialog<String>(
+  final amountCtrl = TextEditingController(text: '${member.monthlyAmount}');
+  final saved = await showDialog<bool>(
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setModal) => AlertDialog(
-        title: Text(l10n.loginRole),
-        content: DropdownButton<String>(
-          isExpanded: true,
-          value: selected,
-          items: roles
-              .map(
-                (r) => DropdownMenuItem(
-                  value: r.id,
-                  child: Text(r.name),
+        title: Text(l10n.editMember),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InputDecorator(
+              decoration: InputDecoration(labelText: l10n.loginRole),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: selected,
+                  items: roles
+                      .map(
+                        (r) => DropdownMenuItem(
+                          value: r.id,
+                          child: Text(r.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (v) => setModal(() => selected = v),
                 ),
-              )
-              .toList(),
-          onChanged: (v) => setModal(() => selected = v),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: amountCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: l10n.monthlyDonation,
+                prefixText: '৳  ',
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: Text(l10n.cancel),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, selected),
+            onPressed: () => Navigator.pop(context, true),
             child: Text(l10n.save),
           ),
         ],
       ),
     ),
   );
-  if (roleId == null || roleId.isEmpty || !context.mounted) return;
+  final amount = int.tryParse(amountCtrl.text.trim());
+  amountCtrl.dispose();
+  if (saved != true || !context.mounted) return;
+  if (amount == null || amount < 1) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.enterValidAmount)),
+    );
+    return;
+  }
   try {
-    await ref.read(repositoryProvider).updateMember(id: member.id, roleId: roleId);
+    await ref.read(repositoryProvider).updateMember(
+          id: member.id,
+          roleId: selected,
+          monthlyAmount: amount,
+        );
     ref.invalidate(memberDetailProvider(member.id));
+    ref.invalidate(membersProvider);
+    ref.invalidate(dashboardProvider);
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.loginRoleSaved)),
+      SnackBar(content: Text(l10n.memberUpdated)),
     );
   } catch (e) {
     if (!context.mounted) return;

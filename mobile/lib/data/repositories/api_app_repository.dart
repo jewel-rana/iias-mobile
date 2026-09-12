@@ -437,10 +437,12 @@ class ApiAppRepository implements AppRepository {
     required String id,
     String? email,
     String? roleId,
+    int? monthlyAmount,
   }) async {
     final res = await _dio.put('/members/$id', data: {
       if (email != null) 'email': email,
       if (roleId != null && roleId.isNotEmpty) 'role_id': int.tryParse(roleId) ?? roleId,
+      if (monthlyAmount != null) 'monthly_amount': monthlyAmount,
     });
     return _mapMember(res.data as Map<String, dynamic>);
   }
@@ -527,6 +529,11 @@ class ApiAppRepository implements AppRepository {
       if (reason != null && reason.isNotEmpty) 'reason': reason,
     });
     return _mapPayment(res.data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> deletePayment(String id) async {
+    await _dio.delete('/payments/$id');
   }
 
   @override

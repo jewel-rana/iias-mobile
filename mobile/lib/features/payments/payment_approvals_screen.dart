@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/money.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
@@ -31,6 +32,27 @@ class PaymentApprovalsScreen extends ConsumerWidget {
       };
 
   Future<void> _approve(WidgetRef ref, BuildContext context, PaymentRecord p) async {
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.approvePaymentTitle),
+        content: Text(
+          l10n.approvePaymentHint(p.memberName, formatTaka(p.amount), p.receiptNumber),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.accept),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
     try {
       await ref.read(repositoryProvider).approvePayment(p.id);
       ref.invalidate(paymentApprovalsProvider);

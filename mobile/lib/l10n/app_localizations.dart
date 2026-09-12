@@ -110,6 +110,31 @@ class AppLocalizations {
   String get systemRole => _t('System', 'সিস্টেম');
   String get loginRole => _t('Login role', 'লগইন রোল');
   String get loginRoleSaved => _t('Login role saved', 'লগইন রোল সংরক্ষিত');
+  String get editMember => _t('Edit member', 'সদস্য সম্পাদনা');
+  String get memberUpdated => _t('Member updated', 'সদস্য আপডেট হয়েছে');
+  String get monthlyDonationSaved =>
+      _t('Monthly donation updated', 'মাসিক দান আপডেট হয়েছে');
+  String get deletePayment => _t('Delete payment', 'পেমেন্ট মুছুন');
+  String deletePaymentHint(String receipt, String amount) => _t(
+        'Delete $receipt ($amount)? This reverses it from the member\'s dues.',
+        '$receipt ($amount) মুছবেন? সদস্যের বকেয়া থেকে এটি ফিরিয়ে নেওয়া হবে।',
+      );
+  String paymentDeleted(String receipt) =>
+      _t('$receipt deleted', '$receipt মুছে ফেলা হয়েছে');
+  String deletePaymentFailed(Object e) =>
+      _t('Could not delete payment: $e', 'পেমেন্ট মুছা যায়নি: $e');
+  String get approvePaymentTitle =>
+      _t('Approve payment?', 'পেমেন্ট অনুমোদন করবেন?');
+  String approvePaymentHint(String name, String amount, String receipt) => _t(
+        'Approve $amount from $name ($receipt)? It will count toward dues.',
+        '$name-এর $amount ($receipt) অনুমোদন করবেন? এটি চাঁদায় গণনা হবে।',
+      );
+  String get submitPaymentConfirmTitle =>
+      _t('Submit payment request?', 'পেমেন্ট অনুরোধ জমা দেবেন?');
+  String submitPaymentConfirmHint(String amount) => _t(
+        'Submit $amount for admin approval? It will stay pending until accepted.',
+        'অ্যাডমিন অনুমোদনের জন্য $amount জমা দেবেন? গ্রহণ না হওয়া পর্যন্ত এটি অপেক্ষমাণ থাকবে।',
+      );
   String get permissions => _t('Permissions', 'অনুমতি');
   String get adminHasAllPermissions =>
       _t('Admin always has every permission.', 'অ্যাডমিন সব অনুমতি পায়।');

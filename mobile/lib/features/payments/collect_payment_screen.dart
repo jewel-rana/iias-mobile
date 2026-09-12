@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/money.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
@@ -289,6 +290,28 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
         SnackBar(content: Text(context.l10n.noPayableAmount)),
       );
       return;
+    }
+
+    final isSelfSubmit = ref.read(authStateProvider)?.isStaff != true;
+    if (isSelfSubmit) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(context.l10n.submitPaymentConfirmTitle),
+          content: Text(context.l10n.submitPaymentConfirmHint(formatTaka(amount))),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(context.l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(context.l10n.submitForApproval),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
     }
 
     setState(() => _loading = true);
