@@ -14,6 +14,7 @@ import '../members/member_detail_screen.dart';
 import '../members/member_payments_screen.dart';
 import '../members/members_screen.dart';
 import 'payment_approvals_screen.dart';
+import 'collection_screen.dart';
 import 'receipt_screen.dart';
 
 final paymentDetailProvider =
@@ -100,6 +101,7 @@ class _PaymentDetailBody extends ConsumerWidget {
       ref.invalidate(dashboardProvider);
       ref.invalidate(membersProvider);
       ref.invalidate(paymentApprovalsProvider);
+      ref.invalidate(collectionPaymentsProvider);
       ref.invalidate(memberPaymentsProvider(payment.memberId));
       ref.invalidate(memberDetailProvider(payment.memberId));
       if (!context.mounted) return;

@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
+import '../../data/repositories/app_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../members/members_screen.dart';
+
+final collectionFilterProvider = StateProvider<PaymentStatus?>((ref) => null);
+
+final collectionPaymentsProvider = FutureProvider((ref) {
+  final status = ref.watch(collectionFilterProvider);
+  return ref.watch(repositoryProvider).getPayments(status: status);
+});
 
 class CollectionScreen extends ConsumerStatefulWidget {
   const CollectionScreen({super.key});
@@ -25,17 +34,54 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     super.dispose();
   }
 
+  List<PaymentRecord> _filter(List<PaymentRecord> payments) {
+    final q = _query.trim().toLowerCase();
+    if (q.isEmpty) return payments;
+    final qDigits = q.replaceAll(RegExp(r'\D'), '');
+    return payments.where((p) {
+      return p.memberName.toLowerCase().contains(q) ||
+          p.receiptNumber.toLowerCase().contains(q) ||
+          p.amount.toString().contains(q) ||
+          (qDigits.isNotEmpty && p.amount.toString().contains(qDigits));
+    }).toList();
+  }
+
+  Widget _badge(PaymentStatus status) => switch (status) {
+        PaymentStatus.pending => const StatusBadge.pending(),
+        PaymentStatus.rejected => const StatusBadge.rejected(),
+        PaymentStatus.confirmed => const StatusBadge.confirmed(),
+      };
+
   @override
   Widget build(BuildContext context) {
-    final membersAsync = ref.watch(membersProvider);
-    final filter = ref.watch(membersFilterProvider);
+    final filter = ref.watch(collectionFilterProvider);
+    final async = ref.watch(collectionPaymentsProvider);
     final l10n = context.l10n;
+    final dateFmt = DateFormat(
+      'dd MMM yyyy · hh:mm a',
+      Localizations.localeOf(context).toString(),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: IiasAppBar(
         title: l10n.collection,
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            tooltip: l10n.addPayment,
+            onPressed: () => _addPayment(context),
+            icon: const Icon(Icons.add_card_rounded),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-collection',
+        onPressed: () => _addPayment(context),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: Text(l10n.addPayment),
       ),
       body: Column(
         children: [
@@ -46,7 +92,7 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
               textInputAction: TextInputAction.search,
               onChanged: (value) => setState(() => _query = value),
               decoration: InputDecoration(
-                hintText: l10n.searchMembers,
+                hintText: l10n.searchPayments,
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _query.isEmpty
                     ? null
@@ -81,32 +127,32 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                 _FilterPill(
                   label: l10n.all,
                   selected: filter == null,
-                  onTap: () => ref.read(membersFilterProvider.notifier).state = null,
+                  onTap: () => ref.read(collectionFilterProvider.notifier).state = null,
                 ),
                 _FilterPill(
-                  label: l10n.paid,
-                  selected: filter == MemberPaymentStatus.paid,
-                  onTap: () => ref.read(membersFilterProvider.notifier).state =
-                      MemberPaymentStatus.paid,
+                  label: l10n.confirmed,
+                  selected: filter == PaymentStatus.confirmed,
+                  onTap: () => ref.read(collectionFilterProvider.notifier).state =
+                      PaymentStatus.confirmed,
                 ),
                 _FilterPill(
-                  label: l10n.partial,
-                  selected: filter == MemberPaymentStatus.partial,
-                  onTap: () => ref.read(membersFilterProvider.notifier).state =
-                      MemberPaymentStatus.partial,
+                  label: l10n.pending,
+                  selected: filter == PaymentStatus.pending,
+                  onTap: () => ref.read(collectionFilterProvider.notifier).state =
+                      PaymentStatus.pending,
                 ),
                 _FilterPill(
-                  label: l10n.unpaid,
-                  selected: filter == MemberPaymentStatus.unpaid,
-                  onTap: () => ref.read(membersFilterProvider.notifier).state =
-                      MemberPaymentStatus.unpaid,
+                  label: l10n.rejected,
+                  selected: filter == PaymentStatus.rejected,
+                  onTap: () => ref.read(collectionFilterProvider.notifier).state =
+                      PaymentStatus.rejected,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: membersAsync.when(
+            child: async.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
                 child: Padding(
@@ -115,122 +161,92 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${l10n.unableToLoadMembers}\n$e',
+                        '$e',
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 12),
                       AppButton(
                         label: l10n.retry,
-                        onPressed: () => ref.invalidate(membersProvider),
+                        onPressed: () => ref.invalidate(collectionPaymentsProvider),
                       ),
                     ],
                   ),
                 ),
               ),
-              data: (allMembers) {
-                final members = filterMembers(
-                  allMembers,
-                  query: _query,
-                  status: filter,
-                );
-                if (members.isEmpty) {
+              data: (allPayments) {
+                final payments = _filter(allPayments);
+                if (payments.isEmpty) {
                   return EmptyState(
                     message: _query.trim().isEmpty
-                        ? l10n.noMembersFound
-                        : l10n.noMembersMatch(_query),
+                        ? (allPayments.isEmpty ? l10n.noPaymentsYet : l10n.noPaymentsFilter)
+                        : l10n.noPaymentsFilter,
                   );
                 }
                 return RefreshIndicator(
-                  onRefresh: () async => ref.invalidate(membersProvider),
+                  onRefresh: () async => ref.invalidate(collectionPaymentsProvider),
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                    itemCount: members.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 10),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                    itemCount: payments.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
-                      final m = members[index];
-                      final initial = m.name.trim().isEmpty
-                          ? '?'
-                          : m.name.trim().characters.first.toUpperCase();
+                      final p = payments[index];
                       return SectionCard(
                         padding: const EdgeInsets.all(14),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: AppColors.primaryLight,
-                                  child: Text(
-                                    initial,
-                                    style: const TextStyle(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 18,
+                        child: InkWell(
+                          onTap: () => context.push(
+                            '/payment-details/${p.id}',
+                            extra: p,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      p.memberName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  _badge(p.status),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${p.receiptNumber} · ${l10n.paymentMethodName(p.method)}',
+                                style: const TextStyle(color: AppColors.textSecondary),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                dateFmt.format(p.date),
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              MoneyText(p.amount),
+                              if (p.allocations.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                ...p.allocations.map(
+                                  (a) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 2),
+                                    child: Text(
+                                      '${DateFormat('MMM yyyy').format(a.billingMonth)} · ৳ ${a.amount}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        m.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        m.memberCode,
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        l10n.perMonth('${m.monthlyAmount}'),
-                                        style: const TextStyle(
-                                          color: AppColors.primary,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      Text(
-                                        l10n.outstandingAmount('${m.outstanding}'),
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                _badge(m.status),
                               ],
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: () => context.push('/collect/${m.id}'),
-                                icon: const Icon(Icons.payments_rounded, size: 18),
-                                label: Text(l10n.collectPayment),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size.fromHeight(44),
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -244,15 +260,107 @@ class _CollectionScreenState extends ConsumerState<CollectionScreen> {
     );
   }
 
-  Widget _badge(MemberPaymentStatus status) {
-    switch (status) {
-      case MemberPaymentStatus.paid:
-        return const StatusBadge.paid();
-      case MemberPaymentStatus.partial:
-        return const StatusBadge.partial();
-      case MemberPaymentStatus.unpaid:
-        return const StatusBadge.unpaid();
+  Future<void> _addPayment(BuildContext context) async {
+    List<Member> members;
+    try {
+      members = await ref.read(membersProvider.future);
+    } catch (_) {
+      members = const [];
     }
+    if (!context.mounted) return;
+    final selected = await showModalBottomSheet<Member>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        var query = '';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final l10n = context.l10n;
+            final filtered = filterMembers(members, query: query);
+            return SafeArea(
+              child: SizedBox(
+                height: MediaQuery.sizeOf(context).height * 0.7,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.border,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          l10n.selectMemberForPayment,
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        onChanged: (v) => setModalState(() => query = v),
+                        decoration: InputDecoration(
+                          hintText: l10n.searchMembersShort,
+                          prefixIcon: const Icon(Icons.search),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: filtered.isEmpty
+                          ? EmptyState(message: l10n.noMembersFound)
+                          : ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                              itemCount: filtered.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 8),
+                              itemBuilder: (context, index) {
+                                final m = filtered[index];
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: CircleAvatar(
+                                    backgroundColor: AppColors.primaryLight,
+                                    child: Text(
+                                      m.name.trim().isEmpty
+                                          ? '?'
+                                          : m.name.trim().characters.first.toUpperCase(),
+                                      style: const TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    m.name,
+                                    style: const TextStyle(fontWeight: FontWeight.w700),
+                                  ),
+                                  subtitle: Text(
+                                    '${m.memberCode} · ${l10n.perMonth('${m.monthlyAmount}')}',
+                                  ),
+                                  onTap: () => Navigator.pop(context, m),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (selected == null || !context.mounted) return;
+    context.push('/collect/${selected.id}');
   }
 }
 

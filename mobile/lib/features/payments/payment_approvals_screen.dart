@@ -10,6 +10,7 @@ import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../dashboard/dashboard_screen.dart';
+import 'collection_screen.dart';
 
 final paymentApprovalFilterProvider =
     StateProvider<PaymentStatus?>((ref) => PaymentStatus.pending);
@@ -56,6 +57,7 @@ class PaymentApprovalsScreen extends ConsumerWidget {
     try {
       await ref.read(repositoryProvider).approvePayment(p.id);
       ref.invalidate(paymentApprovalsProvider);
+      ref.invalidate(collectionPaymentsProvider);
       ref.invalidate(dashboardProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -101,6 +103,7 @@ class PaymentApprovalsScreen extends ConsumerWidget {
             reason: reasonCtrl.text.trim().isEmpty ? null : reasonCtrl.text.trim(),
           );
       ref.invalidate(paymentApprovalsProvider);
+      ref.invalidate(collectionPaymentsProvider);
       ref.invalidate(dashboardProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

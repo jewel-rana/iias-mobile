@@ -35,4 +35,27 @@ void main() {
     expect(result[2].amount, 500);
     expect(result.fold<int>(0, (s, a) => s + a.amount), 1300);
   });
+
+  test('can allocate up to 36 months', () {
+    final dues = List.generate(
+      36,
+      (i) => MonthlyDue(
+        id: '$i',
+        memberId: 'm1',
+        billingMonth: DateTime(2023, 10 + i, 1),
+        amountDue: 500,
+        amountPaid: 0,
+        status: DueStatus.unpaid,
+      ),
+    );
+
+    final result = suggestAllocations(
+      dues: dues,
+      paymentAmount: 36 * 500,
+      monthlyAmount: 500,
+    );
+
+    expect(result.length, 36);
+    expect(result.fold<int>(0, (s, a) => s + a.amount), 36 * 500);
+  });
 }

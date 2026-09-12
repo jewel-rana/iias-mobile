@@ -243,7 +243,10 @@ class AppLocalizations {
   String get assalamuAlaikum => _t('Assalamu Alaikum', 'আসসালামু আলাইকুম');
   String get quickActions => _t('Quick Actions', 'দ্রুত কাজ');
   String get addMember => _t('Add Member', 'সদস্য যোগ');
+  String get addPayment => _t('Add payment', 'পেমেন্ট যোগ করুন');
   String get collectPayment => _t('Collect Payment', 'পেমেন্ট গ্রহণ');
+  String get selectMemberForPayment =>
+      _t('Select a member', 'একজন সদস্য বেছে নিন');
   String get addExpense => _t('Add Expense', 'ব্যয় যোগ');
   String get viewUnpaid => _t('View Unpaid', 'বকেয়া দেখুন');
   String get activeCampaigns => _t('Active Campaigns', 'চলমান ক্যাম্পেইন');
@@ -288,6 +291,8 @@ class AppLocalizations {
   String get recordDonation => _t('Record donation', 'দান রেকর্ড করুন');
   String get searchMembers =>
       _t('Search by name, ID or phone', 'নাম, আইডি বা ফোন দিয়ে খুঁজুন');
+  String get searchPayments =>
+      _t('Search by member or receipt', 'সদস্য বা রসিদ দিয়ে খুঁজুন');
   String get memberProfileNotFound =>
       _t('Member profile not found', 'সদস্য প্রোফাইল পাওয়া যায়নি');
   String get paymentPendingApproval =>
@@ -562,8 +567,8 @@ class AppLocalizations {
       _t('৳ $amount/month', '৳ $amount/মাস');
   String get selectMonths => _t('Select Months', 'মাস বেছে নিন');
   String get selectMonthsHint => _t(
-        'Choose which months to pay. Nothing is selected by default.',
-        'যে মাসগুলোর পেমেন্ট দেবেন সেগুলো বেছে নিন। ডিফল্টে কিছুই নির্বাচিত নয়।',
+        'Choose which months to pay, including up to 3 years back. Nothing is selected by default.',
+        'যে মাসগুলোর পেমেন্ট দেবেন সেগুলো বেছে নিন, সর্বোচ্চ ৩ বছর আগ পর্যন্ত। ডিফল্টে কিছুই নির্বাচিত নয়।',
       );
   String get noPayableMonths =>
       _t('No payable months available', 'পরিশোধযোগ্য মাস নেই');

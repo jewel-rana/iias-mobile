@@ -45,7 +45,7 @@ List<PaymentAllocation> suggestAllocations({
       result.add(PaymentAllocation(billingMonth: cursor, amount: take));
       remaining -= take;
       cursor = DateTime(cursor.year, cursor.month + 1, 1);
-      if (result.length > 24) break;
+      if (result.length > 48) break;
     }
   }
 

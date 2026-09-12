@@ -9,6 +9,9 @@ import '../../core/widgets/common_widgets.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_repository.dart';
 import '../../l10n/app_localizations.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../members/members_screen.dart';
+import 'collection_screen.dart';
 
 class CollectPaymentScreen extends ConsumerStatefulWidget {
   const CollectPaymentScreen({super.key, required this.memberId});
@@ -20,6 +23,9 @@ class CollectPaymentScreen extends ConsumerStatefulWidget {
 }
 
 class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
+  static const _lookbackMonths = 36;
+  static const _advanceMonths = 4;
+
   Member? _member;
   List<Member> _members = [];
   List<MonthlyDue> _dues = [];
@@ -81,47 +87,27 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
 
     final items = <({DateTime month, int amount, bool isAdvance, DueStatus? status})>[];
     final now = DateTime(DateTime.now().year, DateTime.now().month, 1);
+    var cursor = DateTime(now.year, now.month - _lookbackMonths, 1);
+    final lastAdvance = DateTime(now.year, now.month + _advanceMonths, 1);
 
-    final unpaid = _dues.where((d) => !d.isFullyPaid).toList()
-      ..sort((a, b) => a.billingMonth.compareTo(b.billingMonth));
-
-    for (final due in unpaid) {
-      items.add((
-        month: due.billingMonth,
-        amount: due.remaining,
-        isAdvance: due.billingMonth.isAfter(now),
-        status: due.status,
-      ));
-    }
-
-    final chronological = [..._dues]
-      ..sort((a, b) => a.billingMonth.compareTo(b.billingMonth));
-    var cursor = chronological.isEmpty
-        ? DateTime(now.year, now.month, 1)
-        : DateTime(
-            chronological.last.billingMonth.year,
-            chronological.last.billingMonth.month + 1,
-            1,
-          );
-    var added = 0;
-    while (added < 4) {
-      final exists = _dues.any(
-        (d) =>
-            d.billingMonth.year == cursor.year &&
-            d.billingMonth.month == cursor.month &&
-            d.isFullyPaid,
-      );
-      final alreadyListed = items.any(
-        (i) => i.month.year == cursor.year && i.month.month == cursor.month,
-      );
-      if (!exists && !alreadyListed) {
-        items.add((
-          month: cursor,
-          amount: member.monthlyAmount,
-          isAdvance: cursor.isAfter(now),
-          status: null,
-        ));
-        added++;
+    while (!cursor.isAfter(lastAdvance)) {
+      MonthlyDue? due;
+      for (final d in _dues) {
+        if (d.billingMonth.year == cursor.year && d.billingMonth.month == cursor.month) {
+          due = d;
+          break;
+        }
+      }
+      if (due == null || !due.isFullyPaid) {
+        final amount = due?.remaining ?? member.monthlyAmount;
+        if (amount > 0) {
+          items.add((
+            month: cursor,
+            amount: amount,
+            isAdvance: cursor.isAfter(now),
+            status: due?.status,
+          ));
+        }
       }
       cursor = DateTime(cursor.year, cursor.month + 1, 1);
     }
@@ -332,6 +318,9 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                 : null,
           );
       if (!mounted) return;
+      ref.invalidate(collectionPaymentsProvider);
+      ref.invalidate(membersProvider);
+      ref.invalidate(dashboardProvider);
       context.go('/payment-success', extra: payment);
     } catch (e) {
       if (!mounted) return;
