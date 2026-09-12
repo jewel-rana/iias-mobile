@@ -451,17 +451,38 @@ class _CollectPaymentScreenState extends ConsumerState<CollectPaymentScreen> {
                     )
                   else
                     DropdownButtonFormField<OrganizationWallet>(
+                      isExpanded: true,
                       value: _orgWallets.contains(_orgWallet) ? _orgWallet : null,
                       decoration: InputDecoration(
                         labelText: l10n.organizationWalletTo,
                         prefixIcon: const Icon(Icons.account_balance_outlined),
                       ),
-                      hint: Text(l10n.selectOrganizationWallet),
+                      hint: Text(
+                        l10n.selectOrganizationWallet,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                       items: _orgWallets
                           .map(
                             (w) => DropdownMenuItem(
                               value: w,
-                              child: Text(w.display),
+                              child: Text(
+                                w.display,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      selectedItemBuilder: (context) => _orgWallets
+                          .map(
+                            (w) => Align(
+                              alignment: AlignmentDirectional.centerStart,
+                              child: Text(
+                                w.display,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                             ),
                           )
                           .toList(),
