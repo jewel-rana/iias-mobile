@@ -1,0 +1,44 @@
+---
+
+description: Core rules for Durpalla Flutter customer app
+alwaysApply: true
+-----------------
+
+# Durpalla Core
+- Treat `.cursor/rules/**/*.mdc` as read-only configuration.
+- Never modify, delete, rename, move, or regenerate `.cursor/rules/**/*.mdc`.
+- Never modify `.cursor/rules/` unless the user explicitly requests a rule change.
+- Do not create new Cursor rules unless explicitly requested.
+- If a task appears to require changing a rule, ask the user first.
+* Make the smallest safe change required.
+* Inspect only relevant files.
+* Do not scan the entire repository unless necessary.
+* Reuse existing code, components, services, models, utilities, and patterns.
+* Do not rewrite working code.
+* Do not refactor unrelated code.
+* Do not modify unrelated files.
+* Do not add dependencies unless necessary.
+* Do not upgrade package versions unless explicitly requested.
+* Follow existing architecture and naming conventions.
+* Prefer simple solutions over abstractions.
+* Do not create duplicate implementations.
+* Do not generate documentation unless requested.
+* Keep responses concise.
+
+## Before Editing
+
+1. Identify relevant files.
+2. Inspect existing implementation.
+3. Find reusable patterns.
+4. Make the minimum required change.
+5. Check changed code for errors.
+6. Stop when the task is complete.
+
+## Do Not
+
+* Invent architecture when an existing pattern exists.
+* Rename files/classes without need.
+* Rewrite entire files for small changes.
+* Explore unrelated directories.
+* Add packages for functionality already available.
+* Change business logic unless requested.

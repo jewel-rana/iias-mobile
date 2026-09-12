@@ -1,0 +1,36 @@
+---
+
+description: Performance rules for Durpalla Flutter customer app
+globs:
+
+* "lib/**/*.dart"
+  
+alwaysApply: false
+
+---
+
+# Performance
+
+* Avoid unnecessary rebuilds.
+* Avoid unnecessary API requests.
+* Reuse existing cached data.
+* Dispose controllers, streams, listeners, and subscriptions correctly.
+* Paginate large lists.
+* Prefer lazy lists for large datasets.
+* Avoid expensive work inside `build()`.
+* Do not perform network/database operations directly inside `build()`.
+* Avoid unnecessary animations.
+* Avoid creating objects repeatedly inside frequently rebuilt widgets.
+
+## Optimization
+
+Do not optimize code without a clear reason.
+
+Prefer:
+
+* Simple code.
+* Existing Flutter mechanisms.
+* Existing project utilities.
+* Measurable improvements.
+
+Do not introduce complex caching, state management, isolates, or architectural changes merely for theoretical performance.

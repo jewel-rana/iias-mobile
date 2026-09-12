@@ -1,0 +1,50 @@
+---
+
+description: Flutter UI and UX rules for Durpalla customer app
+globs:
+
+* "lib/**/*.dart"
+  alwaysApply: false
+
+---
+
+# Flutter UI
+
+* Follow the existing Durpalla design system.
+* Reuse existing widgets, themes, colors, typography, spacing, buttons, cards, dialogs, and forms.
+* Do not invent new UI patterns when an existing pattern exists.
+* Prefer `const` widgets where applicable.
+* Avoid unnecessary widget rebuilds.
+* Keep reusable widgets small.
+* Preserve existing navigation behavior.
+* Support Android and iOS.
+* Use responsive layouts.
+* Avoid unnecessary animations.
+* Keep touch targets usable.
+* Follow existing state-management patterns.
+
+## Typography
+
+* English: Manrope.
+* Bangla: Hind Siliguri.
+* Reuse existing `ThemeData`.
+* Do not add another font unless explicitly requested.
+
+## Localization
+
+* User-facing text must use the existing localization system.
+* Reuse existing localization keys.
+* Add new keys only when required.
+* Never hardcode repeated UI strings.
+* Do not translate API/database identifiers.
+
+## UI Changes
+
+Before creating a component:
+
+1. Search for an existing similar component.
+2. Reuse it if possible.
+3. Extend it only when necessary.
+4. Create a new component only when reuse is inappropriate.
+
+Do not redesign existing screens unless explicitly requested.

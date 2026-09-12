@@ -1,0 +1,41 @@
+---
+
+description: Security rules for Durpalla Flutter customer app
+globs:
+
+* "lib/**/*.dart"
+  
+alwaysApply: false
+
+---
+
+# Security
+
+* Never hardcode secrets.
+* Never expose private keys.
+* Never commit credentials.
+* Never log passwords.
+* Never log access tokens.
+* Never log payment credentials.
+* Never weaken authentication.
+* Never disable SSL/TLS verification.
+* Never bypass certificate validation.
+* Use secure storage for sensitive local data when the existing architecture supports it.
+* Do not expose internal backend errors to users.
+* Validate user input where appropriate.
+* Preserve existing authorization behavior.
+
+## Sensitive Data
+
+Treat these as sensitive:
+
+* Access tokens
+* Refresh tokens
+* Passwords
+* Payment information
+* Personal information
+* Booking information
+* Authentication data
+
+Do not print or persist sensitive data unnecessarily.
+

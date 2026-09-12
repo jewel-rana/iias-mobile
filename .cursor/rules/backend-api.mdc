@@ -1,0 +1,54 @@
+---
+
+description: API and backend integration rules for IIAS Flutter app
+globs:
+
+* "lib/**/*api*.dart"
+* "lib/**/*service*.dart"
+* "lib/**/*repository*.dart"
+* "lib/**/*model*.dart"
+* "lib/**/*dto*.dart"
+alwaysApply: false
+
+---
+
+# API
+
+* Reuse the existing API client/service architecture.
+* Never invent endpoints.
+* Never invent request parameters.
+* Never invent response fields.
+* Never assume backend behavior.
+* Inspect existing API implementations before adding code.
+* Reuse existing models and serialization patterns.
+* Preserve existing authentication handling.
+* Preserve existing error handling.
+* Handle loading, success, empty, and error states where appropriate.
+* Do not modify backend contracts from the Flutter app.
+
+## Models
+
+* Follow existing model naming and serialization.
+* Reuse existing base classes/utilities.
+* Do not duplicate models representing the same API resource.
+* Do not add fields unless supported by the API.
+
+## Errors
+
+* Use existing error-handling utilities.
+* Show localized user-friendly messages.
+* Never expose stack traces or raw backend exceptions to users.
+* Avoid logging sensitive response data.
+
+## Requests
+
+* Avoid duplicate API requests.
+* Reuse existing caching where available.
+* Do not introduce a new HTTP client.
+* Do not add retry logic unless required.
+
+## Security
+
+* Never hardcode API secrets.
+* Never commit credentials or private keys.
+* Never log access tokens, passwords, payment data, or sensitive personal data.
